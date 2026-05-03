@@ -1,0 +1,1387 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+<title>Aldan Coach – Playbook Capture</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;600;700&family=DM+Sans:wght@400;500;600;700&family=DM+Serif+Display&display=swap" rel="stylesheet"/>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+<style>
+:root {
+  --navy:   #0d1b2a;
+  --navy2:  #162032;
+  --navy3:  #1e2d42;
+  --saffron:#e8850a;
+  --saffron2:#f5a623;
+  --gold:   #f0c040;
+  --cream:  #fdf6ec;
+  --white:  #ffffff;
+  --muted:  #8a9bb0;
+  --border: rgba(255,255,255,0.08);
+  --radius: 16px;
+  --shadow: 0 8px 32px rgba(0,0,0,0.35);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;background:var(--navy);color:var(--white);font-family:'DM Sans',sans-serif;overflow:hidden}
+#app{height:100%;display:flex;flex-direction:column;position:relative}
+
+/* ── SCREENS ── */
+.screen{position:absolute;inset:0;display:flex;flex-direction:column;opacity:0;pointer-events:none;transition:opacity .35s ease,transform .35s ease;transform:translateY(16px)}
+.screen.active{opacity:1;pointer-events:all;transform:translateY(0)}
+
+/* ── WELCOME SCREEN ── */
+#welcome{background:linear-gradient(155deg,#0d1b2a 0%,#1a2c45 50%,#0f2235 100%);align-items:center;justify-content:center;padding:32px 24px;text-align:center}
+.logo-ring{width:96px;height:96px;border-radius:50%;background:linear-gradient(135deg,var(--saffron),var(--gold));display:flex;align-items:center;justify-content:center;margin:0 auto 28px;box-shadow:0 0 0 12px rgba(232,133,10,0.12),0 0 0 24px rgba(232,133,10,0.06)}
+.logo-ring span{font-size:40px}
+.welcome-tag{font-size:11px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--saffron2);margin-bottom:12px}
+.welcome-title{font-family:'DM Serif Display',serif;font-size:32px;line-height:1.2;margin-bottom:8px}
+.welcome-title em{color:var(--saffron2);font-style:normal}
+.welcome-sub{font-size:15px;color:var(--muted);line-height:1.6;margin-bottom:36px}
+.hindi-greeting{background:rgba(255,255,255,0.06);border:1px solid var(--border);border-radius:12px;padding:16px 20px;margin-bottom:36px;font-family:'Noto Sans Devanagari',sans-serif;font-size:16px;line-height:1.7;color:rgba(255,255,255,0.85)}
+.btn-primary{width:100%;padding:18px;background:linear-gradient(135deg,var(--saffron),var(--saffron2));border:none;border-radius:14px;font-size:17px;font-weight:700;color:var(--white);cursor:pointer;letter-spacing:.3px;box-shadow:0 4px 20px rgba(232,133,10,0.4);transition:transform .15s,box-shadow .15s}
+.btn-primary:active{transform:scale(.97);box-shadow:0 2px 10px rgba(232,133,10,0.3)}
+.version-tag{font-size:11px;color:var(--muted);margin-top:20px}
+
+/* ── MODULE SELECT ── */
+#modules{background:var(--navy);padding:0}
+.modules-header{padding:52px 24px 20px;background:linear-gradient(180deg,var(--navy2) 0%,var(--navy) 100%)}
+.back-btn{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--muted);cursor:pointer;margin-bottom:20px;background:none;border:none;color:var(--muted);padding:0}
+.back-btn:hover{color:var(--white)}
+.modules-title{font-family:'DM Serif Display',serif;font-size:26px;margin-bottom:6px}
+.modules-sub{font-size:14px;color:var(--muted);line-height:1.5}
+.modules-scroll{flex:1;overflow-y:auto;padding:20px 24px 40px}
+.module-card{background:var(--navy2);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:16px;cursor:pointer;transition:all .2s;position:relative;overflow:hidden}
+.module-card::before{content:'';position:absolute;inset:0;opacity:0;transition:opacity .2s;background:linear-gradient(135deg,rgba(232,133,10,0.08),transparent)}
+.module-card:active,.module-card:hover{border-color:rgba(232,133,10,0.35);transform:translateY(-1px)}
+.module-card:active::before,.module-card:hover::before{opacity:1}
+.module-card.completed{border-color:rgba(16,185,129,0.3);background:rgba(16,185,129,0.06)}
+.module-card.in-progress{border-color:rgba(232,133,10,0.3)}
+.mod-top{display:flex;align-items:flex-start;gap:14px;margin-bottom:12px}
+.mod-icon{width:46px;height:46px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
+.mod-icon.m1{background:rgba(99,102,241,0.15)}
+.mod-icon.m2{background:rgba(232,133,10,0.15)}
+.mod-icon.m3{background:rgba(239,68,68,0.15)}
+.mod-icon.m4{background:rgba(16,185,129,0.15)}
+.mod-info{flex:1}
+.mod-num{font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:3px}
+.mod-name{font-size:17px;font-weight:700;margin-bottom:4px}
+.mod-desc{font-size:13px;color:var(--muted);line-height:1.5}
+.mod-badge{padding:4px 10px;border-radius:999px;font-size:11px;font-weight:700;align-self:flex-start;flex-shrink:0}
+.badge-new{background:rgba(99,102,241,0.15);color:#a5b4fc}
+.badge-done{background:rgba(16,185,129,0.15);color:#34d399}
+.badge-prog{background:rgba(232,133,10,0.15);color:var(--saffron2)}
+.mod-footer{display:flex;align-items:center;justify-content:space-between;padding-top:12px;border-top:1px solid var(--border)}
+.mod-time{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:5px}
+.mod-arrow{font-size:18px;color:var(--saffron)}
+
+/* ── INTERVIEW SCREEN ── */
+#interview{background:var(--navy);flex-direction:column}
+.interview-header{padding:52px 20px 16px;background:var(--navy2);border-bottom:1px solid var(--border);flex-shrink:0}
+.interview-header .back-btn{margin-bottom:12px}
+.interview-meta{display:flex;align-items:center;justify-content:space-between}
+.interview-mod-name{font-size:15px;font-weight:700}
+.interview-progress{font-size:12px;color:var(--muted)}
+.progress-bar{height:3px;background:rgba(255,255,255,0.08);border-radius:999px;margin-top:10px;overflow:hidden}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--saffron),var(--gold));border-radius:999px;transition:width .4s ease}
+
+/* CHAT AREA */
+.chat-area{flex:1;overflow-y:auto;padding:20px 16px;display:flex;flex-direction:column;gap:16px;scroll-behavior:smooth}
+.chat-area::-webkit-scrollbar{width:0}
+.bubble{max-width:88%;animation:bubbleIn .3s ease}
+@keyframes bubbleIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.bubble.ai{align-self:flex-start}
+.bubble.user{align-self:flex-end}
+.bubble-inner{padding:14px 16px;border-radius:18px;font-size:15px;line-height:1.65}
+.bubble.ai .bubble-inner{background:var(--navy3);border:1px solid var(--border);border-bottom-left-radius:4px;color:var(--white)}
+.bubble.user .bubble-inner{background:linear-gradient(135deg,var(--saffron),var(--saffron2));border-bottom-right-radius:4px;color:var(--white)}
+.bubble-sender{font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:6px}
+.bubble.ai .bubble-sender{color:var(--saffron2)}
+.bubble.user .bubble-sender{color:rgba(255,255,255,0.7);text-align:right}
+.bubble-hint{font-size:12px;color:var(--muted);margin-top:6px;padding-left:2px;font-style:italic}
+
+/* typing indicator */
+.typing-indicator{display:none;align-self:flex-start;padding:12px 16px;background:var(--navy3);border:1px solid var(--border);border-radius:18px;border-bottom-left-radius:4px}
+.typing-dots{display:flex;gap:4px}
+.typing-dots span{width:7px;height:7px;background:var(--muted);border-radius:50%;animation:dot 1.2s infinite}
+.typing-dots span:nth-child(2){animation-delay:.2s}
+.typing-dots span:nth-child(3){animation-delay:.4s}
+@keyframes dot{0%,60%,100%{transform:translateY(0);opacity:.4}30%{transform:translateY(-6px);opacity:1}}
+.typing-indicator.show{display:flex}
+
+/* MODULE COMPLETE */
+.mod-complete-card{background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.25);border-radius:var(--radius);padding:20px;text-align:center;margin:8px 0}
+.mod-complete-card .icon{font-size:40px;margin-bottom:12px}
+.mod-complete-card h3{font-size:18px;font-weight:700;color:#34d399;margin-bottom:6px}
+.mod-complete-card p{font-size:14px;color:var(--muted);line-height:1.5}
+
+/* INPUT AREA */
+.input-area{padding:12px 16px 28px;background:var(--navy2);border-top:1px solid var(--border);flex-shrink:0}
+.input-row{display:flex;gap:10px;align-items:flex-end}
+.input-box{flex:1;background:var(--navy3);border:1px solid var(--border);border-radius:14px;padding:12px 14px;font-size:15px;color:var(--white);font-family:'DM Sans',sans-serif;resize:none;min-height:50px;max-height:120px;outline:none;transition:border-color .2s;line-height:1.5}
+.input-box::placeholder{color:var(--muted)}
+.input-box:focus{border-color:rgba(232,133,10,0.4)}
+.mic-btn{width:50px;height:50px;border-radius:50%;border:2px solid var(--border);background:var(--navy3);cursor:pointer;font-size:22px;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .2s;position:relative}
+.mic-btn.recording{background:rgba(239,68,68,0.15);border-color:rgba(239,68,68,0.5);animation:pulse 1s infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,0.3)}50%{box-shadow:0 0 0 8px rgba(239,68,68,0)}}
+.send-btn{width:50px;height:50px;border-radius:50%;background:linear-gradient(135deg,var(--saffron),var(--saffron2));border:none;cursor:pointer;font-size:20px;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:transform .15s,opacity .15s;box-shadow:0 4px 12px rgba(232,133,10,0.35)}
+.send-btn:active{transform:scale(.93)}
+.send-btn:disabled{opacity:.4;cursor:not-allowed}
+.voice-hint{font-size:11px;color:var(--muted);text-align:center;margin-bottom:8px}
+
+/* ── ADMIN SCREEN ── */
+#admin{background:var(--navy);overflow-y:auto}
+.admin-header{padding:52px 24px 20px;background:var(--navy2);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:10}
+.admin-header h1{font-family:'DM Serif Display',serif;font-size:24px;margin-bottom:4px}
+.admin-header p{font-size:13px;color:var(--muted)}
+.admin-body{padding:20px 24px 60px}
+.admin-section{margin-bottom:32px}
+.admin-section-title{font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--saffron2);margin-bottom:14px}
+.session-card{background:var(--navy2);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:12px;cursor:pointer;transition:border-color .2s}
+.session-card:hover{border-color:rgba(232,133,10,0.3)}
+.session-card-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px}
+.session-name{font-size:15px;font-weight:700}
+.session-time{font-size:12px;color:var(--muted)}
+.session-mods{display:flex;gap:6px;flex-wrap:wrap}
+.session-mod-pill{font-size:11px;padding:3px 8px;border-radius:999px;background:rgba(232,133,10,0.12);color:var(--saffron2);font-weight:600}
+.response-card{background:var(--navy3);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:10px}
+.response-q{font-size:12px;color:var(--saffron2);font-weight:600;margin-bottom:6px;line-height:1.4}
+.response-a{font-size:14px;color:rgba(255,255,255,0.85);line-height:1.6}
+.response-followups{margin-top:8px;padding-top:8px;border-top:1px solid var(--border)}
+.response-fu-item{font-size:12px;margin-bottom:4px}
+.response-fu-item span:first-child{color:var(--muted)}
+.response-fu-item span:last-child{color:rgba(255,255,255,0.75)}
+.admin-mod-header{display:flex;align-items:center;gap:10px;margin:20px 0 12px;padding-bottom:10px;border-bottom:1px solid var(--border)}
+.admin-mod-icon{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px}
+.admin-mod-title{font-size:15px;font-weight:700}
+.empty-state{text-align:center;padding:60px 24px;color:var(--muted)}
+.empty-state .icon{font-size:48px;margin-bottom:16px}
+.empty-state p{font-size:15px;line-height:1.6}
+.refresh-btn{display:flex;align-items:center;gap:6px;background:var(--navy3);border:1px solid var(--border);border-radius:10px;padding:8px 14px;font-size:13px;color:var(--muted);cursor:pointer;margin-bottom:20px;transition:all .2s}
+.refresh-btn:hover{border-color:var(--saffron);color:var(--saffron)}
+.stat-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:24px}
+.stat-box{background:var(--navy2);border:1px solid var(--border);border-radius:12px;padding:14px;text-align:center}
+.stat-val{font-size:24px;font-weight:800;color:var(--saffron2);margin-bottom:4px}
+.stat-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+.summary-block{background:var(--navy2);border:1px solid rgba(16,185,129,0.2);border-radius:12px;padding:16px;margin-bottom:12px}
+.summary-block h4{font-size:13px;font-weight:700;color:#34d399;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.summary-block p{font-size:14px;color:rgba(255,255,255,0.8);line-height:1.6}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- WELCOME -->
+  <div class="screen active" id="welcome">
+    <div class="logo-ring"><span>🎯</span></div>
+    <div class="welcome-tag">Aldan Healthcare · WomEm Bihar</div>
+    <h1 class="welcome-title">Aldan <em>Coach</em></h1>
+    <p class="welcome-sub">Amardeep ji ke saath ek conversation — jinke jawab se hum Bihar ka best sales playbook banayenge</p>
+    <div class="hindi-greeting">
+      नमस्ते Amardeep ji 🙏<br/>
+      यह conversation आपकी expertise को capture करने के लिए है — ताकि Bihar के सभी MBEs आपसे सीख सकें।<br/>
+      आराम से बात करें, जैसे किसी दोस्त से करते हैं।
+    </div>
+    <button class="btn-primary" onclick="showModules()">शुरू करें → Start</button>
+    <div class="version-tag">v1.0 · coach.aldancare.com</div>
+  </div>
+
+  <!-- MODULES -->
+  <div class="screen" id="modules">
+    <div class="modules-header">
+      <button class="back-btn" onclick="showWelcome()">← वापस</button>
+      <h2 class="modules-title">कौन सा module करें?</h2>
+      <p class="modules-sub">कोई भी module चुनें। बाद में बाकी कर सकते हैं।</p>
+    </div>
+    <div class="modules-scroll">
+      <div class="module-card" id="mod-card-1" onclick="startModule(1)">
+        <div class="mod-top">
+          <div class="mod-icon m1">🧠</div>
+          <div class="mod-info">
+            <div class="mod-num">Module 1</div>
+            <div class="mod-name">Doctor Reading</div>
+            <div class="mod-desc">Doctor ke saath meeting shuru hote hi aap kya dekhte ho? Kaise identify karte ho ki kaun sa approach kaam karega?</div>
+          </div>
+          <span class="mod-badge badge-new" id="badge-1">New</span>
+        </div>
+        <div class="mod-footer">
+          <span class="mod-time">⏱ ~15 min</span>
+          <span class="mod-arrow">→</span>
+        </div>
+      </div>
+
+      <div class="module-card" id="mod-card-2" onclick="startModule(2)">
+        <div class="mod-top">
+          <div class="mod-icon m2">💊</div>
+          <div class="mod-info">
+            <div class="mod-num">Module 2</div>
+            <div class="mod-name">Product Detailing</div>
+            <div class="mod-desc">Ek-ek product ke liye — Ovalux, Lacoria, LOQ10, Myolife Plus, Utilac, Argilux — aap exact kya bolte ho?</div>
+          </div>
+          <span class="mod-badge badge-new" id="badge-2">New</span>
+        </div>
+        <div class="mod-footer">
+          <span class="mod-time">⏱ ~35 min</span>
+          <span class="mod-arrow">→</span>
+        </div>
+      </div>
+
+      <div class="module-card" id="mod-card-3" onclick="startModule(3)">
+        <div class="mod-top">
+          <div class="mod-icon m3">⚔️</div>
+          <div class="mod-info">
+            <div class="mod-num">Module 3</div>
+            <div class="mod-name">Objection Stress Test</div>
+            <div class="mod-desc">Main ek skeptical Bihar doctor ban jata hoon — Muzaffarpur ki senior gynecologist. Aap detail karein.</div>
+          </div>
+          <span class="mod-badge badge-new" id="badge-3">New</span>
+        </div>
+        <div class="mod-footer">
+          <span class="mod-time">⏱ ~15 min</span>
+          <span class="mod-arrow">→</span>
+        </div>
+      </div>
+
+      <div class="module-card" id="mod-card-4" onclick="startModule(4)">
+        <div class="mod-top">
+          <div class="mod-icon m4">⭐</div>
+          <div class="mod-info">
+            <div class="mod-num">Module 4</div>
+            <div class="mod-name">Excellence Code</div>
+            <div class="mod-desc">Aapki nazar mein ek achhe MBE aur average MBE mein kya fark hota hai? Bihar territory ke baare mein kya jaante ho?</div>
+          </div>
+          <span class="mod-badge badge-new" id="badge-4">New</span>
+        </div>
+        <div class="mod-footer">
+          <span class="mod-time">⏱ ~10 min</span>
+          <span class="mod-arrow">→</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- INTERVIEW -->
+  <div class="screen" id="interview">
+    <div class="interview-header">
+      <button class="back-btn" onclick="showModules()">← Modules</button>
+      <div class="interview-meta">
+        <span class="interview-mod-name" id="interview-mod-name">Module 1</span>
+        <span class="interview-progress" id="interview-progress">Q 1 of 6</span>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
+    </div>
+    <div class="chat-area" id="chat-area">
+      <div class="typing-indicator" id="typing"><div class="typing-dots"><span></span><span></span><span></span></div></div>
+    </div>
+    <div class="input-area">
+      <div class="voice-hint" id="voice-hint">🎤 Mic button dabayein ya type karein</div>
+      <div class="input-row">
+        <textarea class="input-box" id="user-input" placeholder="Yahan type karein..." rows="1" oninput="autoResize(this)" onkeydown="handleKey(event)"></textarea>
+        <button class="mic-btn" id="mic-btn" onclick="toggleMic()" title="Voice input">🎤</button>
+        <button class="send-btn" id="send-btn" onclick="sendMessage()" title="Send">➤</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ADMIN -->
+  <div class="screen" id="admin">
+    <div class="admin-header">
+      <h1>📊 Coach Admin</h1>
+      <p>Amardeep ji ke responses · Live view</p>
+    </div>
+    <div class="admin-body" id="admin-body">
+      <div class="empty-state"><div class="icon">⏳</div><p>Loading sessions...</p></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+/* ═══════════════════════════════════════════════
+   FIREBASE CONFIG
+═══════════════════════════════════════════════ */
+const FB_CONFIG = {
+  apiKey:"AIzaSyBJcohYrAYOMn-C_qdbPXMwOeMyGy8Sw1M",
+  authDomain:"fintech-nd.firebaseapp.com",
+  databaseURL:"https://fintech-nd-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId:"fintech-nd",
+  storageBucket:"fintech-nd.firebasestorage.app",
+  messagingSenderId:"577595905463",
+  appId:"1:577595905463:web:69beb0a824b0d972560432"
+};
+firebase.initializeApp(FB_CONFIG);
+const DB = firebase.database();
+const DB_PATH = "coach/v1";
+
+/* ═══════════════════════════════════════════════
+   PRODUCT KNOWLEDGE BASE — from WomEm Visual Aid (verified)
+   Visual Aid: "Womem Visual 2K22 March.cdr" — 17 pages
+═══════════════════════════════════════════════ */
+const PRODUCTS = {
+  ovalux: {
+    name:"Ovalux",
+    indication:"Female infertility — Egg quality & Ovarian function",
+    composition:"Ubiquinol Acetate 100mg + DHEA (SR) 50mg + DHEA (IR) 25mg + Piperine 5mg + Melatonin 3mg + L-Methylfolate 714mcg + Vitamin D2 600 IU",
+    packing:"5x2x14 Capsules (1 cap OD after meal)",
+    keyBenefits:[
+      "DHEA — improves fertility & egg quality",
+      "Ubiquinol Acetate — improves ovarian response & embryological parameters",
+      "Melatonin — helps in follicular maturation",
+      "Piperine — enhances nutrient absorption & reduces insulin resistance",
+      "Vitamin D2 — improves female fertility & pregnancy outcomes"
+    ],
+    clinicalClaims:[
+      "Reduces damage to egg cells",
+      "Improves egg quality",
+      "Enhances fertility",
+      "Decreases risk of IUGR",
+      "Decreases risk of preterm birth",
+      "Improves functioning of placenta"
+    ],
+    problemAddressed:"Improper Ovulation → Non-Implantation → Preterm Birth → IUGR → Improper functioning of Placenta",
+    idealPatient:"Woman with poor egg quality, low ovarian reserve, failed IVF cycle, or subfertility. IVF-going patients are gold target.",
+    pts:856.21, ptr:951.34, mrp:1219,
+    competitors:["Fertisure","Ovaa Shield","CoQ10 supplements"]
+  },
+
+  lacoria: {
+    name:"Lacoria",
+    indication:"Bacterial Vaginosis (BV) & Leucorrhoea",
+    tagline:"Clinically Proven 1st Probiotics to Treat Bacterial Vaginosis — Specially for Indian Women",
+    composition:"Lact. Crispatus 1Bn + Lact. Rhamnosus 1Bn + Lact. Gasseri 0.3Bn + Lact. Jensenii 0.2Bn + Lact. Iners 0.5Bn + Fructo Oligo Saccharide 100mg",
+    packing:"10x1x14 Capsules (2 caps BID for 7 days)",
+    keyBenefits:[
+      "RESTORES Normal Vaginal Flora",
+      "Directly inhibits pathogens: Candida albicans, Gardnerella vaginalis, E. coli, Leptotrichia, Mobiluncus, Mycoplasma",
+      "Produces lactic acid & bacteriocins that kill bacterial & viral pathogens",
+      "Consolidates efficacy of antibiotic & prevents BV recurrence",
+      "Just 7 days course treats and prevents recurrence"
+    ],
+    clinicalRefs:[
+      "Probiotics alone more effective than antibiotics in BV therapy (10 RCT meta-analysis — Int J Environ Res Public Health 2019)",
+      "Indian vaginal microflora dominated by 4 Lactobacillus species — J Med Microbiol 2014"
+    ],
+    idealPatient:"Woman with leucorrhoea, foul-smelling discharge, recurrent BV, or post-antibiotic vaginal dysbiosis",
+    pts:303.33, ptr:337.03, mrp:432,
+    competitors:["Metrogyl","Secnidazole combinations","Generic probiotics"]
+  },
+
+  loq10plus: {
+    name:"LOQ-10 Plus",
+    indication:"Male Factor Infertility — Oligospermia, Asthenospermia & Teratospermia (OAT)",
+    tagline:"In Male Factor Infertility",
+    composition:"Ubiquinol 30mg + Astaxanthin 8mg + L-Carnitine 200mg + L-Arginine 250mg + Selenium 40mcg + Zinc 11mg + Omega-3 Fatty Acids + Methylcobalamin 2.5mcg + Lycopene 10% 4000mcg + Benfotiamine 18mg",
+    packing:"10x1x10 Tablets (1 tab OD)",
+    keyDifferentiator:"Ubiquinol in LOQ-10 Plus is SUPERIOR than conventional CoQ-10 (Ubiquinone) — 8 times more bioavailable, 40% more effective, 3.75 fold greater blood concentration after 8 hours (Ref: Mitochondria Vol.7, Suppl.1)",
+    ingredientRoles:{
+      "Zinc":"Improves concentration, morphology",
+      "Selenium":"Antioxidant, linear progression",
+      "Methylcobalamin":"Improves count",
+      "L-Arginine":"Improves motility, concentration",
+      "L-Carnitine":"Improves count, concentration, motility",
+      "CoQ10 Ubiquinol":"Improves count, motility, concentration, morphology",
+      "Astaxanthin":"Improves motility",
+      "Omega-3 (EPA+DHA)":"Improves concentration, motility, prevents DNA damage",
+      "Lycopene":"Improves concentration, motility",
+      "Benfotiamine":"Improves motility, morphology"
+    },
+    keyStats:"29.3% of infertility is due to male factor, 17.6% due to both male & female factors (Nutrients 2020)",
+    idealPatient:"Male partner in infertile couple with OAT on semen analysis. Prescribed alongside female treatment.",
+    pts:362.12, ptr:402.36, mrp:516,
+    competitors:["Spermamax","Proxeed Plus","Fertisure M"]
+  },
+
+  myolife: {
+    name:"Myolife",
+    indication:"Infertility due to Anovulatory PCOS (lean PCOS / normal weight)",
+    tagline:"Adds Life to Life",
+    composition:"Myo-Inositol 1000mg + L-Methylfolate 500mcg + Vitamin D3 1000 IU — Tablets",
+    packing:"10x1x10 Tablets (1 tab BID)",
+    keyBenefits:[
+      "Normalizes ovarian function, improves oocyte & embryo quality in PCOS",
+      "Increases insulin sensitivity, decreases hyperandrogenism & improves menstrual cycle (Reprod Health 2021)",
+      "Revealed significant increase in SHBG levels",
+      "Regulates glucose uptake & FSH signalling (Endocr Connect 2017)",
+      "Increases clinical pregnancy rates & reduces abortion rates (Medicine Baltimore 2017)",
+      "Combination of MI and Folic acid has promising improvement of symptoms & infertility in PCOS patients"
+    ],
+    idealPatient:"PCOS woman with anovulation, irregular cycles — normal/lean body weight. First-line before ovulation induction.",
+    pts:178.25, ptr:198.05, mrp:254,
+    competitors:["Inofolic","Ovacare","Generic Myo-Inositol"]
+  },
+
+  myolifePlus: {
+    name:"Myolife Plus",
+    indication:"Infertility due to Anovulatory PCOS — specifically in OBESE women",
+    tagline:"One stop solution for PCOS in Obese women — With added advantage of Melatonin",
+    composition:"Myo-Inositol 1000mg + D-Chiro-Inositol 25mg + Melatonin 1.5mg + L-Methylfolate 1mg — Tablets",
+    packing:"10x1x10 Tablets (1 tab BID)",
+    keyDifferentiator:"Physiological ratio of MI/DCI (40:1) — same ratio found in nature. Plus Melatonin for oocyte quality.",
+    keyBenefits:[
+      "Significantly improves endocrine & metabolic parameters & insulin resistance in young overweight PCOS patients (Minerva Ginecol 2015)",
+      "Ensures better clinical results — reduction of IR, androgen blood levels, cardiovascular risk, regularization of menstrual cycle & spontaneous ovulation (Expert Rev Clinic Pharmacol 2014)",
+      "MI with Melatonin — improves ovarian stimulation protocols & pregnancy outcomes in infertile women with poor oocyte quality (Gynecol Endocrinol 2011)",
+      "Synergistically enhances oocyte & embryo quality"
+    ],
+    keyStats:"40:1 ratio is the physiological MI:DCI ratio found in plasma",
+    idealPatient:"Obese PCOS woman — BMI >25, insulin resistant, anovulatory. Clear differentiation from Myolife (normal weight).",
+    pts:230.78, ptr:256.42, mrp:329,
+    competitors:["Inofolic Alpha","Ovacare Plus"]
+  },
+
+  utilac: {
+    name:"Utilac",
+    indication:"Recurrent UTI & Vulvovaginal Candidiasis",
+    tagline:"Ends Irritation, Ensures Comfort",
+    composition:"L Reuteri 1.25Bn + L Rhamnosus 2.50Bn + L Casei 1.25Bn + L Crispatus 1.00Bn + L Fermentum 1.25Bn + Cranberry Extract 100mg — Capsules",
+    packing:"10x1x10 Capsules (1 cap OD)",
+    keyBenefits:[
+      "Lactobacillus is the preferred probiotic for prophylaxis & treatment of urogynaecologic infections (Turk J Urol 2018)",
+      "Inhibits adhesion of pathogens",
+      "Produces hydrogen peroxide & biosurfactants that acidify vaginal mucosa",
+      "Has synergistic activity with host immune system",
+      "Effective for treatment & prevention of recurrences of candidiasis and UTIs (J Midwifery Womens Health 2016)",
+      "Lactobacilli have GRAS status (Generally Regarded as Safe) as per WHO"
+    ],
+    problemAddressed:"Antibiotic resistance has led to increased incidence of infections. Alternative antibiotic-free approaches gaining popularity.",
+    idealPatient:"Woman with 2+ UTI episodes per year, or recurrent candidiasis, or post-antibiotic vaginal infection.",
+    pts:224.53, ptr:249.47, mrp:320,
+    competitors:["Ural","Macrobid","Canesten","Generic cranberry"]
+  },
+
+  argilux: {
+    name:"Argilux",
+    indication:"Maternal & Fetal Outcomes — Pregnancy nutrition",
+    tagline:"For Excellent Maternal & Fetal Outcomes",
+    composition:"L-Arginine 3gm + DHA (20%) 200mg + Proanthocyanidin 75mg + Vitamin B6 2mg — Sachets (Orange flavour, Sugar free)",
+    packing:"20x6.5gm Sachets (1 sachet daily with half glass water for 3 months; can be given till end of 3rd trimester)",
+    keyBenefits:{
+      "L-Arginine":[
+        "Encourages growth of placenta & the fetus",
+        "Improves embryonic survival & birth weight",
+        "Helps prevent pre-eclampsia (J Matern fetal neonatal med 2023)"
+      ],
+      "DHA":[
+        "Involved in early placentation process",
+        "Helps prevent & treat pregnancy complications (Journal of Translational Medicine 2023)"
+      ],
+      "Proanthocyanidin":[
+        "Potent antioxidant that strengthens blood vessels",
+        "Exhibits anti-inflammatory & anti-diabetic effects (Journal of Functional Foods 2020)"
+      ],
+      "Vitamin B6":[
+        "Helps in brain development & functioning of nervous system",
+        "Relieves nausea & vomiting from morning sickness (Int J Gyn Obst Vol.116, Issue 3)"
+      ]
+    },
+    idealPatient:"Pregnant woman from 1st trimester. Especially high-risk pregnancies — pre-eclampsia risk, IUGR history, poor placentation.",
+    pts:687.97, ptr:764.41, mrp:979,
+    competitors:["Pregnacare","PregOmega","Generic DHA supplements"]
+  },
+
+  aldova: {
+    name:"Aldova / Aldova-DS",
+    indication:"Ovulation induction support — Ovulation to Embryogenesis to Successful Delivery",
+    composition:"Aldova: Clomiphene Citrate 50mg + N-Acetyl Cysteine 600mg + Astaxanthin 4mg (Combi Pack)\nAldova-DS: CC 100mg + NAC 600mg + Astaxanthin 4mg",
+    packing:"10x1 Combi Pack of 5 Tablets + 25 Capsules",
+    dosageGuideline:"Day 3-7: CC + NAC tablet; Day 8-27: Astaxanthin capsule only",
+    keyBenefits:[
+      "CC + NAC leads to better folliculogenesis & ovulation rate in PCOS women",
+      "Significantly increased pregnancy rate & endometrial thickness in PCOS (J ObstetGynecol Res 2012)",
+      "Beneficial for PCOS with CC resistance, preterm birth, RPL",
+      "Astaxanthin improves oocyte maturation & positively influences ART outcomes (Journal of Ovarian Research 2024)"
+    ],
+    tagline:"Aldan's support for OVA",
+    idealPatient:"PCOS woman requiring ovulation induction — Aldova (CC 50mg) first line; Aldova-DS when higher dose needed.",
+    pts:447.41, ptr:497.13, mrp:637,
+    competitors:["Clofert","Siphene","Fertomid combinations"]
+  },
+
+  myoGDM: {
+    name:"Myo-GDM",
+    indication:"Gestational Diabetes Mellitus (GDM) — Prevention & Treatment",
+    tagline:"India's 1st — Prevents & Treats GDM",
+    composition:"Myo-Inositol 550mg + D-Chiro-Inositol 13.8mg + Chromium Picolinate 30mcg + Vitamin D2 1000 IU + Fenugreek Extract 500mg + L-Methylfolate 1mg",
+    packing:"10x1x10 Tablets (1 tab BID)",
+    keyStats:"India GDM rate 10-14.3% — much higher than West. 1 in 5 pregnant women likely to have GDM (GoI Ministry of Health 2018). WHO recommended.",
+    keyBenefits:[
+      "MI+DCI classified as insulin sensitizing agents other than Metformin & Troglitazone",
+      "Fenugreek exhibits antidiabetic potential by delaying gastric emptying & glucose absorption",
+      "Restores pancreatic beta cell function",
+      "Corrects insulin-sensitive carbohydrate metabolic enzyme activities, serum lipid profiles, enhances insulin sensitivity"
+    ],
+    idealPatient:"Pregnant woman with GDM diagnosis or high risk (family history of DM, obese, previous macrosomic baby).",
+    pts:218.27, ptr:242.53, mrp:311,
+    competitors:["Metformin (in pregnancy)","Inositol combinations"]
+  },
+
+  osteofem: {
+    name:"Osteofem",
+    indication:"Osteoporosis & Osteopenia — Bone Density",
+    tagline:"Non-hormonal way to treat & prevent Osteoporosis — Flavonoids Designed to Improve Bone Density",
+    composition:"Dihydro Quercetin (DHQ) 500mg + Pine Bark Ext. 100mg + Calcitriol 0.25mcg",
+    packing:"5x3x10 Tablets (1 tab OD)",
+    keyBenefits:{
+      "DHQ (Dihydro Quercetin)":[
+        "Natural Flavonoid — anti-oxidant & anti-inflammatory",
+        "Confirms to fight Osteoporosis & promote bone health",
+        "Decreases bone resorption & osteoclast formation",
+        "Exhibits osteoblastogenesis activating effects (Front Endocrinol 2021)"
+      ],
+      "Pine Bark Extract":[
+        "Inhibits aggravated bone resorption, prevents BMD loss",
+        "Restores impaired microarchitecture of bone"
+      ],
+      "Calcitriol":[
+        "Acts directly on muscle cell membranes — enhanced calcium uptake",
+        "Decreases bone turnover markers",
+        "Reduces or reverses BMD loss & improves QOL (Clin Inter Aging 2014)"
+      ]
+    },
+    keyStats:"52.2% elderly women have Osteoporosis; 47.8% have Osteopenia. Significant osteopenia/osteoporosis in 35-40 years age group.",
+    idealPatient:"Perimenopausal/menopausal woman with bone density concerns, or post-fracture, or on long-term steroids.",
+    pts:325.22, ptr:361.36, mrp:463,
+    competitors:["CalciTrust","Shelcal","Calcitriol combinations"]
+  },
+
+  aldanvit: {
+    name:"Aldanvit",
+    indication:"Lifestyle disorders — Preventive health",
+    tagline:"Vital Nutrient for Health",
+    composition:"Omega-3 Fatty Acids + Ginkgobiloba 30mg + Cynocobalamin 2.5mcg + Lycopene (6%) 5000mcg + Lutein 20mcg + Green Tea Ext. 50mg + Grape Seed Ext. 50mg + Ginseng Ext. 42.5mg + Alpha Lipoic Acid 100mg + Biotin 30mcg",
+    packing:"10x1x10 Tablets (1 tab OD)",
+    keyBenefits:[
+      "Strong antioxidant effects",
+      "Improves collagen synthesis & bone formation",
+      "Prevents development of certain cancers (breast, colon, uterus)",
+      "Positive role in prevention of menstrual syndrome & postmenopausal hot flushes",
+      "Prevents high BP, high cholesterol, Type 2 diabetes & coronary heart disease risk factors",
+      "Helps prevent eye diseases including cataracts",
+      "Balances HDL/LDL cholesterol",
+      "Stabilizes blood sugar"
+    ],
+    idealPatient:"Woman above 35 with lifestyle issues — stress, fatigue, urban diet deficiencies. Or as preventive add-on prescription.",
+    pts:111.95, ptr:124.39, mrp:160,
+    competitors:["Polycap","Becosules","Generic multivitamins"]
+  }
+};
+
+const BIHAR_ARCHETYPES = {
+  relationshipDoc:"Relationship doctor — trust pe chalta hai. Data nahi chahiye, feel chahiye.",
+  evidenceDoc:"Evidence doctor — published study dikhaao, tabhi prescribe karunga.",
+  busyGP:"Busy GP — 2-3 minute maximum. Ek crisp message chahiye.",
+  crmDoc:"CRM-conscious — jaanta hai company invest kar rahi hai, ROI expect karta hai.",
+  competitorLoyal:"Competitor-loyal — already koi aur brand likh raha hai, switch ke liye specific trigger chahiye."
+};
+
+/* ═══════════════════════════════════════════════
+   INTERVIEW SCRIPTS — Questions per module
+═══════════════════════════════════════════════ */
+const MODULES_CONFIG = {
+  1: {
+    name:"Doctor Reading",
+    icon:"🧠",
+    color:"m1",
+    systemPrompt: `Tu ek intelligent interviewer hai jo Amardeep Sinha — Aldan Healthcare ke Bihar territory ke best Area Sales Manager — se unka sales playbook capture kar raha hai.
+
+CONTEXT:
+- Company: Aldan Healthcare, WomEm division
+- Territory: Bihar (Siwan, Bettiah, Darbhanga, Muzaffarpur, Begusarai, Purnea, Saharsa, Patna)
+- Products: Ovalux (egg quality/DOR/IVF), Lacoria (BV/Leucorrhoea), LOQ10 Plus (male infertility), Myolife/Myolife Plus (PCOS lean vs obese), Utilac (recurrent UTI), Argilux (maternal-fetal/pregnancy), Aldova (ovulation induction), Myo-GDM (gestational diabetes)
+- HIGH VOLUME: Ovalux, Lacoria, Myolife Plus, Aldova. FOCUS/NEW: Argilux (launched last year, needs aggressive push)
+- Amardeep is the most experienced person — uski expertise capture karni hai
+
+INTERVIEW RULES:
+1. Ek time mein ek hi question. Never multiple questions.
+2. Response ke baad decide kar — kya follow-up chahiye? Maximum 2 follow-ups per main question.
+3. Follow-up sirf tab karo jab answer vague ho ya aur depth mil sakti ho.
+4. Tone: warm, curious, respectful colleague — not interrogator.
+5. Language: Hinglish (Hindi + English mix) — jaise Bihar ke educated sales professional baat karte hain.
+6. Jab enough captured ho jaye, next question par move karo.
+7. Module complete hone par clearly indicate karo: [MODULE_COMPLETE]
+
+MODULE 1 OBJECTIVES — Doctor Reading:
+Capture karna hai:
+A. Doctor archetypes — Amardeep kaise categorize karta hai doctors ko
+B. First-2-minute read — chamber mein ghusne ke baad kya observe karta hai
+C. Territory knowledge — kaunse HQ mein kaunse type ke doctors hain
+D. Approach decision — kaun sa approach kab use karta hai
+
+QUESTIONS to cover (adapt based on conversation):
+Q1: "Amardeep ji, jab aap kisi doctor ke chamber mein first time ghuste hain — pehle 30 seconds mein aap kya observe karte hain? Kya dekhte hain?"
+Q2: "Aapki nazar mein Bihar ke doctors kitne type ke hote hain? Unhe kaise categories mein rakhte hain?"
+Q3: "Muzaffarpur aur Patna ke doctors mein koi fundamental fark hai approach ke liye?"
+Q4: "Ek doctor jo clearly busy hai aur sirf 2 minute dega — aap instantly kya change karte hain apne approach mein?"
+Q5: "Kaunsa HQ territory sabse challenging hai aur kyun?"
+
+Start with Q1. Be conversational.`,
+    questions: 5
+  },
+
+  2: {
+    name:"Product Detailing",
+    icon:"💊",
+    color:"m2",
+    systemPrompt: `Tu ek intelligent interviewer hai jo Amardeep Sinha — Aldan Healthcare WomEm Bihar ke best ASM — se unka product-wise detailing playbook capture kar raha hai.
+
+COMPLETE WOMEM PORTFOLIO — VERIFIED FROM VISUAL AID + LEAVE-BEHINDS + SCIENTIFIC LIT:
+
+━━━ HIGH VOLUME BRANDS (priority capture) ━━━
+
+1. OVALUX ★★★ (₹1219 MRP | 5x3x10 Caps | 1 cap OD after meal x 3 months or till conception)
+Composition: Ubiquinol Acetate 100mg + DHEA (SR) 50mg + DHEA (IR) 25mg + Piperine 5mg + Melatonin 3mg + L-Methylfolate 714mcg + Vit D2 600 IU
+Indication: Diminished Ovarian Reserve (DOR), poor egg quality, IVF/ICSI support, subfertility
+Brand message: "Doctor, now every OVA's performance will be like — Oooh.... Vaah.... Beautiful — Because of Ovalux"
+KEY CLINICAL EVIDENCE (from leave-behind literature):
+- DHEA improves ovarian reserve — AMH, FSH, AFC significantly improved. More effective in women <38 years. No severe adverse effects. (Steroids Vol.211, Nov 2024 — 122 women with DOR, Mosul)
+- DHEA improves endometrial thickness in IVF/ICSI — 16 RCTs, 1973 women. Improved clinical pregnancy rate (OR=1.34), oocytes retrieved, fertilized, high-quality embryos. (Journal of Ovarian Research Vol.18, Article 35, 2025)
+- Ubiquinol Acetate improves ovarian response & embryological parameters
+- Melatonin helps follicular maturation
+- Piperine enhances nutrient absorption & reduces insulin resistance
+Benefits: Reduces egg cell damage, improves egg quality, enhances fertility, decreases IUGR risk, decreases preterm birth risk, improves placenta function
+Competitors: Fertisure, Ovaa Shield, generic CoQ10/DHEA supplements
+
+2. LACORIA ★★★ (₹432 MRP | 10x1x14 Caps | 2 caps BID x 7 days minimum)
+Composition: Lact. Crispatus 1Bn + Lact. Rhamnosus 1Bn + Lact. Gasseri 0.3Bn + Lact. Jensenii 0.2Bn + Lact. Iners 0.5Bn + FOS 100mg
+Tagline: "Clinically Proven 1st Probiotic to Treat Bacterial Vaginosis — Specially for Indian Women"
+KEY CLINICAL ANGLES:
+- Commonest cause of Leucorrhoea is BV — and untreated BV leads to: Infertility, Missed Abortion, Spontaneous Abortion, Preterm Delivery, Increased Neonatal Mortality & Morbidity
+- Indian vaginal microflora dominated by L. crispatus (25%), L. jensenii (25%), L. reuteri (16.7%) — Lacoria provides exactly these strains
+- Reduces Gardnerella vaginalis cytotoxic activity & preterm birth
+- Just 7-day course treats AND prevents recurrence
+- Probiotics reported effective in prevention & treatment of BV
+Features: Provides recommended selected strains for BV. Cures and prevents recurrence. Specific in BV management. Safe & effective for healthy microbiota restoration.
+Competitors: Metrogyl, Secnidazole, Clindamycin (antibiotic — high recurrence)
+
+3. MYOLIFE PLUS ★★★ (₹329 MRP | 10x1x10 Tabs | 1 tab BID)
+Composition: Myo-Inositol 1000mg + D-Chiro-Inositol 25mg (40:1 ratio) + Melatonin 1.5mg + L-Methylfolate 1mg
+Tagline: "The one STOP solution for PCOS — With added advantage of Melatonin"
+Indication: Anovulatory PCOS specifically in OBESE women
+PCOS Pathophysiology (use visual): Pituitary → ↑LH/↓FSH → Ovary → Chronic Anovulation → Hyperandrogenism → Hyperinsulinemia/IR → Adipose Tissue → Extraglandular Aromatization → back to Pituitary (vicious cycle)
+KEY RCT EVIDENCE (from leave-behind):
+- Int J Endocrinology 2016, Article 3204083 — 46 PCOS women (obese/overweight), MI+DCI 40:1 vs placebo x 6 months:
+  Significant ↓ LH, free testosterone, fasting insulin, HOMA index
+  Significant ↑ SHBG, 17β-Estradiol
+  Ultrasound confirmed ovulatory function restored
+  Conclusion: "Safe combined use of inositol stereoisomers largely suitable — valid clinical approach in PCOS management"
+- MI+Melatonin improves ovarian stimulation & pregnancy outcomes in poor oocyte quality (Gynecol Endocrinol 2011)
+Differentiation from Myolife: Myolife = lean/normal PCOS; Myolife Plus = OBESE PCOS (BMI>25, insulin resistant)
+Competitors: Inofolic Alpha, Ovacare Plus
+
+4. ALDOVA ★★★ (₹637 MRP | Aldova-DS ₹778 | 10x1 Combi Pack: 5 tabs + 25 caps)
+Composition: Clomiphene Citrate 50mg + N-Acetyl Cysteine 600mg + Astaxanthin 4mg (Combi Pack)
+Aldova-DS: CC 100mg + NAC 600mg + Astaxanthin 4mg
+Dosage Protocol: Day 3-7: CC+NAC tablet OD; Day 8-27: Astaxanthin capsule OD
+Tagline: "For enhanced success — Ovulation to Embryogenesis to Successful Delivery. Aldan's support for OVA."
+KEY EVIDENCE — 4 STUDIES:
+Study 1 — Austin Journal of Obstetrics & Gynecology, April 2019, 6(1):
+  RCT, 150 infertile PCOS women, NAC+CC vs CC alone
+  Result: Statistically significant better pregnancy rate in NAC+CC group (p=0.008)
+  Conclusion: "NAC when added to CC can enhance ovulation and pregnancy rates in PCOS patients"
+Study 2 — Front. Endocrinol., March 2023, Vol.14:
+  Triple-blind placebo-controlled RCT, 50 infertile women with ENDOMETRIOSIS stage III/IV undergoing ART
+  Astaxanthin 6mg/day x 12 weeks
+  Results: Significantly lower IL-1β & TNF-α (anti-inflammatory). Improved oocytes retrieved, mature (MII) oocytes, high-quality embryos
+  Conclusion: "AST pretreatment modulates inflammation & oxidative stress — ART outcomes improved. Potential therapeutic target for infertile endometriosis patients undergoing ART"
+Study 3 — Journal of Ovarian Research Vol.17, Article 205, 2024:
+  NAC significantly reduced oocyte ROS, increased mitochondrial membrane potential in PCOS ovaries
+  Women receiving NAC had significantly lower uFSH dosage & greater clinical pregnancy rates per OI cycle (p<0.005)
+Study 4 — Journal of Ovarian Research Vol.17, Article 163, 2024:
+  Astaxanthin meta-analysis — significantly increased oocyte maturation rate (MD: 8.40, 95%CI: 4.57-12.23)
+  Increased total antioxidant capacity in follicular fluid
+CC+NAC: Better folliculogenesis, ovulation in PCOS; significant increase in pregnancy rate & endometrial thickness (J ObstetGynecol Res 2012); effective in CC resistance, preterm birth, RPL (Cell J. 2017)
+PATIENT TYPES: (1) PCOS needing OI — Aldova; (2) CC-resistant PCOS — Aldova-DS; (3) Endometriosis going for ART — Astaxanthin angle is powerful here
+Use: When Myolife/Myolife Plus alone insufficient — next step is ovulation induction. Aldova = CC 50mg first line; Aldova-DS = higher dose needed.
+
+━━━ FOCUS BRAND — AGGRESSIVE PUSH ━━━
+
+5. ARGILUX ★★★ NEW (₹979 MRP | 20x6.5gm Sachets | 1 sachet OD with half glass water x 3 months)
+Composition: L-Arginine 3gm + DHA (20%) 200mg + Proanthocyanidin 75mg + Vit B6 2mg
+Form: Orange flavoured granules, Sugar free sachet
+Tagline: "For Excellent Maternal & Fetal Outcomes"
+Indication: Pregnancy — from 1st trimester to 3rd trimester as needed
+KEY SCIENTIFIC EVIDENCE (2 systematic reviews from leave-behind):
+- J Matern Fetal Neonatal Med 2023 (51 studies eligible, 25 in women): L-Arg reduced pre-eclampsia development (4 studies), decreased BP, reduced need for antihypertensives in HDP women. In IUGR: improved fetoplacental circulation, birth weight, neonatal outcomes. In threatened preterm birth: reduced uterine contractions. CONCLUSION: "L-Arg administration is safe — beneficial to maternal & fetal outcomes in moderate clinical disorders"
+- Pharmacogenomics review 2025: L-Arg plays crucial role in nitric oxide production — necessary for proper placental development & fetal growth. Positive effects on fetal growth, maternal BP, prevention of pre-eclampsia.
+Ingredient roles:
+  L-Arginine: Encourages placenta & fetus growth, improves embryonic survival & birth weight, prevents pre-eclampsia
+  DHA: Early placentation process, prevents & treats pregnancy complications
+  Proanthocyanidin: Potent antioxidant, strengthens blood vessels, anti-inflammatory & anti-diabetic
+  Vit B6: Brain development & nervous system, relieves nausea/vomiting of morning sickness
+TARGET PRESCRIBERS: Gynecologists managing high-risk pregnancies, antenatal OPDs
+TRIGGER PATIENTS: Pre-eclampsia risk, IUGR history, twin pregnancies, GDM, elderly primigravida
+
+━━━ SUPPORTING BRANDS ━━━
+
+6. MYOLIFE (₹254 MRP | 10x1x10 Tabs | 1 tab BID)
+MI 1000mg + L-Methylfolate 500mcg + Vit D3 1000 IU
+Lean/normal weight PCOS — anovulatory, oligomenorrhoea, amenorrhoea. IVF adjunct.
+"Supports fertility in PCOS, for a new Life"
+
+7. LOQ-10 PLUS (₹516 MRP | 10x1x10 Tabs | 1 tab OD)
+Male infertility — OAT syndrome. Ubiquinol 8x more bioavailable than regular CoQ10.
+Prescribed alongside female fertility treatment.
+
+8. UTILAC (₹320 MRP | 10x1x10 Caps | 1 cap OD)
+5-strain probiotic + Cranberry 100mg. Recurrent UTI & candidiasis. GRAS/WHO status.
+
+9. MYO-GDM (₹311 MRP) — India's 1st GDM product. India rate 10-14.3%.
+
+10. OSTEOFEM (₹463 MRP) — Non-hormonal bone density. DHQ+Pine Bark+Calcitriol.
+
+11. ALDANVIT (₹160 MRP) — Preventive multivitamin, lifestyle disorders.
+
+━━━ INTERVIEW RULES ━━━
+1. Ek time mein sirf ek question — kabhi multiple questions nahi.
+2. Maximum 2 smart follow-ups per product — sirf jab answer mein depth missing ho.
+3. Tone: Hinglish, warm, curious senior colleague.
+4. Goal: Capture Amardeep ke EXACT words — patient trigger sentence, transition to product, proof moment style, Rx ask, objection responses.
+5. Priority order: Ovalux → Lacoria → Myolife Plus → Aldova → Argilux (most important new) → rest.
+6. [MODULE_COMPLETE] jab 5 priority brands cover ho jayein minimum.
+
+━━━ QUESTION SEQUENCE ━━━
+
+OVALUX — Start here:
+"Amardeep ji, Ovalux ke liye — aap doctor ke chamber mein kaunsi patient ka scene set karte ho? Exactly pehla sentence kya hota hai jab Ovalux ki baat shuru karte ho?"
+Follow-up A (if vague): "DHEA ko doctor ko explain karte waqt — technical jaate ho ya patient ki language use karte ho? Kya example dete ho?"
+Follow-up B (on Ovalux evidence): "Ek doctor jo kehta hai 'DHEA ke side effects hote hain' — us objection ka exact jawab kya dete ho? Koi study mention karte ho?"
+
+LACORIA:
+"Lacoria ke liye — aap BV ke consequences se shuru karte ho ya direct product se? Matlab doctor ko pehle yeh convince karte ho ki BV serious hai, ya seedha Lacoria ki baat karte ho?"
+Follow-up: "Bihar mein leucorrhoea ki patient bahut common hai — is angle se Lacoria ka pitch kaise karte ho?"
+
+MYOLIFE PLUS:
+"Myolife Plus ke liye — PCOS mein obese patient ko identify karna easy hai. Lekin doctor ko 40:1 ratio kaise samjhate ho without getting too technical?"
+Follow-up: "Clinical study data — woh 46 PCOS patients wala — use karte ho detail mein? Ya sirf mention karte ho?"
+
+ALDOVA:
+"Aldova ek Rx product hai — CC ke saath NAC aur Astaxanthin. Gynecologist ke saath is combi pack ka rationale kaise explain karte ho? Aur Aldova vs Aldova-DS — doctor ko kaise decide karte ho kaunsa dena hai?"
+
+ARGILUX (most focus):
+"Argilux nayi launch hai — pregnancy nutrition. Is product ke liye Bihar mein doctor awareness kaisi hai? Aur aap khud is product ko kaise develop karne ki planning karte ho — kaunsa approach sochte ho?"
+Follow-up: "Pre-eclampsia risk patient ko Argilux recommend karte waqt doctor ko exactly kya kehte ho? L-Arginine pregnancy mein safe hai — yeh confidence kaise dete ho?"
+Follow-up: "Argilux ₹979 ka hai — pregnancy mein premium product. Patient compliance ke baare mein doctor ka objection kya hota hai aur aap kya jawab dete ho?"
+
+CLOSING:
+"Ek last cheez — inme se kaun sa product aapko personally sabse zyada pasand hai detail karna? Aur Argilux ko develop karne ke liye aapke dimaag mein koi specific idea hai?"
+
+Start with Ovalux. Warm, natural, adaptive.`,
+    questions: 20
+  },
+
+  3: {
+    name:"Objection Stress Test",
+    icon:"⚔️",
+    color:"m3",
+    systemPrompt: `Ab tu role play karega. Tu ban ja:
+
+DR. SUNITA SHARMA
+- Senior Gynecologist + Infertility Specialist, Muzaffarpur, Bihar
+- 22 years experience, MBBS + MD Obs & Gyn + Fellowship Infertility
+- Runs her own clinic — 40-50 patients/day
+- Currently prescribing: Inofolic (instead of Myolife/Myolife Plus), Metrogyl for BV (instead of Lacoria), own brand CoQ10 supplements for egg quality (instead of Ovalux)
+- Skeptical about new pharma brands — "sab ek jaise hain"
+- Time-conscious — max 3-4 minute deti hai MRs ko
+- Occasionally switches to English medical terms mid-sentence
+- Smart — notices if MR is fumbling or unsure
+
+Amardeep tera paas aaya hai Aldan WomEm detail karne.
+
+REAL PRODUCTS AMARDEEP DETAIL KAREGA:
+- Ovalux (Ubiquinol+DHEA+Melatonin — DOR/egg quality/IVF) ₹1219
+- Lacoria (5-strain probiotic — BV/Leucorrhoea) ₹432
+- Myolife Plus (MI+DCI 40:1+Melatonin — obese PCOS) ₹329
+- Aldova (CC+NAC+Astaxanthin combi — ovulation induction) ₹637
+- Argilux (L-Arg+DHA+Proanthocyanidin — pregnancy/pre-eclampsia) ₹979 ← NEW FOCUS
+
+CHARACTER RULES:
+1. Shuru mein cold aur busy — "haan jaldi boliye" energy.
+2. Raise these SPECIFIC, REALISTIC objections (mix and match based on conversation flow):
+
+OVALUX OBJECTIONS:
+- "DHEA prescribe karna mujhe uncomfortable lagta hai — DHEA androgen hai, PCOS mein androgen already high hota hai. Contraindicated nahi hai kya?"
+- "Ye Ubiquinol Acetate — regular CoQ10 se different kaise hai? Sirf marketing hai ya real difference?"
+- "₹1219 ka capsule — meri patients afford nahi karengi, especially Muzaffarpur mein."
+
+LACORIA OBJECTIONS:
+- "BV ke liye main Metrogyl deti hoon — 5 din mein theek ho jata hai. Probiotic 7 din kyun? Aur ₹432 ka — patient toh legi nahi."
+- "Yeh Indian women ke strains ka claim — koi local study hai? Sirf company ka claim toh nahi?"
+
+MYOLIFE PLUS OBJECTIONS:
+- "Inofolic Alpha already 40:1 ratio provide karta hai — Myolife Plus mein extra kya hai? Melatonin? Uska PCOS mein kya role?"
+- "Meri PCOS patients ko main Metformin deti hoon — proven hai, cheap hai. Inositol kyun?"
+
+ALDOVA OBJECTIONS:
+- "CC main already prescribe karti hoon. NAC add karne se kya extra hoga? Aur yeh Combi pack ka price — plain Clomid se zyada kyun?"
+- "Meri endometriosis patients IVF ke liye ja rahi hain — Astaxanthin se unhe kya benefit milega?"
+
+ARGILUX OBJECTIONS (most important — it's new):
+- "L-Arginine pregnancy mein — safety data kya hai? Teratogenic effects ka koi concern?"
+- "₹979 ek sachet ka box — yeh toh bahut expensive hai. Prenatal vitamins toh ₹200-300 mein milte hain. Patient kyun legi?"
+- "Pre-eclampsia ke liye main aspirin recommend karti hoon — L-Arginine se better kaise hai?"
+
+3. Agar Amardeep data-backed jawab de (DHEA study 2024/2025, Inositol RCT 2016, L-Arg systematic review 2023) — impress ho ja, thodi soft ho.
+4. Agar vague ya fumble kare — aur push karo.
+5. Once mid-conversation: "ek second, nurse ko bolna hai" — 10 second pause then continue.
+6. DO NOT break character until [END_ROLEPLAY].
+
+Opening:
+"Haan, Aldan se hain? Dekho, main bahut busy hoon — teen patients wait kar rahi hain. 3-4 minute maximum. Kya laye ho naya?"
+
+After roleplay ends — as the interviewer: "Waah Amardeep ji! Ab doctor se bahar aate hain. In objections mein se kaun sa aapko sabse zyada challenging lagta hai real field mein? Aur Argilux ke ₹979 price objection ka aapka favorite counter kya hai?"`,
+    questions: 8
+  },
+
+  4: {
+    name:"Excellence Code",
+    icon:"⭐",
+    color:"m4",
+    systemPrompt: `Tu interviewer hai — last module. Capture karna hai Amardeep ka excellence philosophy.
+
+RULES: Same as before. Warm, Hinglish, max 2 follow-ups per Q.
+[MODULE_COMPLETE] at end.
+
+QUESTIONS:
+Q1: "Amardeep ji, aapke team mein jo average MBE hai aur aap — field mein kya fundamental difference hai? Ek scene describe karo."
+Q2: "Nayi joining ka MBE — pehle 3 months mein sabse badi galti kya karta hai?"
+Q3: "Bihar territory ka ek aisa secret jo sirf experienced log jaante hain — jo koi textbook mein nahi hoga?"
+Q4: "Agar aapko apne best month ka formula ek line mein batana ho — kya hoga woh?"
+Q5: "10 saal baad Aldan WomEm Bihar mein kya hona chahiye? Aapka vision kya hai?"
+
+Be respectful. This is his legacy.`,
+    questions: 5
+  }
+};
+
+/* ═══════════════════════════════════════════════
+   APP STATE
+═══════════════════════════════════════════════ */
+let currentScreen = 'welcome';
+let currentModule = null;
+let sessionId = null;
+let conversationHistory = [];
+let questionCount = 0;
+let moduleComplete = false;
+let recognition = null;
+let isRecording = false;
+let isWaitingForAI = false;
+
+/* ═══════════════════════════════════════════════
+   SCREEN NAVIGATION
+═══════════════════════════════════════════════ */
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  currentScreen = id;
+}
+function showWelcome() { showScreen('welcome'); }
+function showModules() { loadModuleStatuses(); showScreen('modules'); }
+function showAdmin()   { showScreen('admin'); loadAdminData(); }
+
+/* ═══════════════════════════════════════════════
+   MODULE STATUS
+═══════════════════════════════════════════════ */
+async function loadModuleStatuses() {
+  if (!sessionId) return;
+  try {
+    const snap = await DB.ref(`${DB_PATH}/sessions/${sessionId}/modules`).get();
+    const data = snap.val() || {};
+    [1,2,3,4].forEach(m => {
+      const card  = document.getElementById(`mod-card-${m}`);
+      const badge = document.getElementById(`badge-${m}`);
+      if (!card || !badge) return;
+      const status = data[m]?.status;
+      card.classList.remove('completed','in-progress');
+      if (status === 'complete') {
+        card.classList.add('completed');
+        badge.className = 'mod-badge badge-done';
+        badge.textContent = '✓ Done';
+      } else if (status === 'started') {
+        card.classList.add('in-progress');
+        badge.className = 'mod-badge badge-prog';
+        badge.textContent = 'In Progress';
+      }
+    });
+  } catch(e) { console.error(e); }
+}
+
+/* ═══════════════════════════════════════════════
+   START MODULE
+═══════════════════════════════════════════════ */
+async function startModule(modNum) {
+  currentModule = modNum;
+  moduleComplete = false;
+  conversationHistory = [];
+  questionCount = 0;
+
+  // Create session if not exists
+  if (!sessionId) {
+    sessionId = 'session_' + Date.now();
+    await DB.ref(`${DB_PATH}/sessions/${sessionId}/meta`).set({
+      started: new Date().toISOString(),
+      respondent: 'Amardeep Sinha',
+      territory: 'Bihar'
+    });
+  }
+
+  // Mark module started
+  await DB.ref(`${DB_PATH}/sessions/${sessionId}/modules/${modNum}/status`).set('started');
+
+  // Update UI
+  const cfg = MODULES_CONFIG[modNum];
+  document.getElementById('interview-mod-name').textContent = `${cfg.icon} ${cfg.name}`;
+  document.getElementById('interview-progress').textContent = '';
+  document.getElementById('progress-fill').style.width = '0%';
+
+  // Clear chat
+  const chatArea = document.getElementById('chat-area');
+  chatArea.innerHTML = '<div class="typing-indicator" id="typing"><div class="typing-dots"><span></span><span></span><span></span></div></div>';
+
+  showScreen('interview');
+
+  // Get first AI message
+  await getAIResponse(null);
+}
+
+/* ═══════════════════════════════════════════════
+   CLAUDE API CALL
+═══════════════════════════════════════════════ */
+async function getAIResponse(userMessage) {
+  if (isWaitingForAI) return;
+  isWaitingForAI = true;
+  showTyping(true);
+  disableInput(true);
+
+  // Build messages
+  const messages = [];
+  if (userMessage === null) {
+    // First message — AI starts
+    messages.push({ role: 'user', content: 'Start the interview. Ask the first question.' });
+  } else {
+    // Add full history
+    conversationHistory.forEach(h => messages.push(h));
+    messages.push({ role: 'user', content: userMessage });
+  }
+
+  try {
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 600,
+        system: MODULES_CONFIG[currentModule].systemPrompt,
+        messages
+      })
+    });
+    const data = await resp.json();
+    const aiText = data.content?.[0]?.text || 'Kuch technical issue hua. Please try again.';
+
+    showTyping(false);
+
+    // Check module complete
+    if (aiText.includes('[MODULE_COMPLETE]')) {
+      const cleanText = aiText.replace('[MODULE_COMPLETE]', '').trim();
+      appendBubble('ai', cleanText);
+      await handleModuleComplete();
+    } else {
+      appendBubble('ai', aiText);
+      // Update history
+      if (userMessage !== null) {
+        conversationHistory.push({ role: 'user', content: userMessage });
+      }
+      conversationHistory.push({ role: 'assistant', content: aiText });
+
+      questionCount++;
+      updateProgress();
+      saveToFirebase(userMessage, aiText);
+    }
+  } catch(e) {
+    console.error(e);
+    showTyping(false);
+    appendBubble('ai', '⚠️ Network issue. Please check connection and try again.');
+  }
+
+  isWaitingForAI = false;
+  disableInput(false);
+  document.getElementById('user-input').focus();
+}
+
+/* ═══════════════════════════════════════════════
+   SEND MESSAGE
+═══════════════════════════════════════════════ */
+async function sendMessage() {
+  if (moduleComplete) return;
+  const input = document.getElementById('user-input');
+  const text = input.value.trim();
+  if (!text) return;
+
+  input.value = '';
+  autoResize(input);
+  appendBubble('user', text);
+  scrollChat();
+
+  await getAIResponse(text);
+}
+
+function handleKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    sendMessage();
+  }
+}
+
+/* ═══════════════════════════════════════════════
+   VOICE INPUT
+═══════════════════════════════════════════════ */
+function toggleMic() {
+  if (!('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
+    alert('Voice input is not supported in this browser. Please use Chrome on Android.');
+    return;
+  }
+  if (isRecording) {
+    recognition?.stop();
+    return;
+  }
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  recognition = new SpeechRecognition();
+  recognition.lang = 'hi-IN';
+  recognition.continuous = false;
+  recognition.interimResults = true;
+
+  const micBtn = document.getElementById('mic-btn');
+  const input  = document.getElementById('user-input');
+  const hint   = document.getElementById('voice-hint');
+
+  recognition.onstart = () => {
+    isRecording = true;
+    micBtn.classList.add('recording');
+    micBtn.textContent = '⏹';
+    hint.textContent = '🔴 Sun raha hoon... boliye';
+  };
+  recognition.onresult = (e) => {
+    let transcript = '';
+    for (let i = e.resultIndex; i < e.results.length; i++) {
+      transcript += e.results[i][0].transcript;
+    }
+    input.value = transcript;
+    autoResize(input);
+  };
+  recognition.onend = () => {
+    isRecording = false;
+    micBtn.classList.remove('recording');
+    micBtn.textContent = '🎤';
+    hint.textContent = '🎤 Mic button dabayein ya type karein';
+  };
+  recognition.onerror = () => {
+    isRecording = false;
+    micBtn.classList.remove('recording');
+    micBtn.textContent = '🎤';
+    hint.textContent = '❌ Voice nahi suna — dobara try karein';
+  };
+  recognition.start();
+}
+
+/* ═══════════════════════════════════════════════
+   UI HELPERS
+═══════════════════════════════════════════════ */
+function appendBubble(role, text) {
+  const chatArea = document.getElementById('chat-area');
+  const typing   = document.getElementById('typing');
+
+  const wrap = document.createElement('div');
+  wrap.className = `bubble ${role}`;
+
+  const sender = document.createElement('div');
+  sender.className = 'bubble-sender';
+  sender.textContent = role === 'ai' ? 'ALDAN COACH' : 'AMARDEEP JI';
+
+  const inner = document.createElement('div');
+  inner.className = 'bubble-inner';
+  inner.innerHTML = text.replace(/\n/g,'<br/>');
+
+  wrap.appendChild(sender);
+  wrap.appendChild(inner);
+
+  // Insert before typing indicator
+  chatArea.insertBefore(wrap, typing);
+  scrollChat();
+}
+
+function showTyping(show) {
+  const t = document.getElementById('typing');
+  if (t) t.classList.toggle('show', show);
+  scrollChat();
+}
+
+function scrollChat() {
+  const ca = document.getElementById('chat-area');
+  setTimeout(() => ca.scrollTop = ca.scrollHeight, 80);
+}
+
+function disableInput(dis) {
+  document.getElementById('user-input').disabled = dis;
+  document.getElementById('send-btn').disabled = dis;
+}
+
+function autoResize(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+}
+
+function updateProgress() {
+  const total = MODULES_CONFIG[currentModule].questions;
+  const pct   = Math.min((questionCount / total) * 100, 95);
+  document.getElementById('progress-fill').style.width = pct + '%';
+  document.getElementById('interview-progress').textContent = `Q ${questionCount} of ~${total}`;
+}
+
+/* ═══════════════════════════════════════════════
+   MODULE COMPLETE
+═══════════════════════════════════════════════ */
+async function handleModuleComplete() {
+  moduleComplete = true;
+  document.getElementById('progress-fill').style.width = '100%';
+
+  const chatArea = document.getElementById('chat-area');
+  const card = document.createElement('div');
+  card.className = 'mod-complete-card';
+  card.innerHTML = `
+    <div class="icon">🎉</div>
+    <h3>Module Complete!</h3>
+    <p>Bahut accha, Amardeep ji! Aapke responses save ho gaye hain.<br/>Ab koi aur module kar sakte hain ya baad mein aayein.</p>
+    <br/>
+    <button class="btn-primary" onclick="showModules()" style="font-size:15px;padding:14px">← Modules dekhen</button>
+  `;
+  const typing = document.getElementById('typing');
+  chatArea.insertBefore(card, typing);
+  scrollChat();
+
+  // Mark complete in Firebase
+  await DB.ref(`${DB_PATH}/sessions/${sessionId}/modules/${currentModule}/status`).set('complete');
+  await DB.ref(`${DB_PATH}/sessions/${sessionId}/modules/${currentModule}/completedAt`).set(new Date().toISOString());
+
+  disableInput(true);
+
+  // Generate summary via Claude
+  await generateModuleSummary();
+}
+
+async function generateModuleSummary() {
+  try {
+    const historyText = conversationHistory.map(h =>
+      `${h.role === 'assistant' ? 'Coach' : 'Amardeep'}: ${h.content}`
+    ).join('\n\n');
+
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 800,
+        messages: [{
+          role: 'user',
+          content: `You are analyzing a sales playbook capture interview with Amardeep Sinha, senior ASM at Aldan Healthcare WomEm division, Bihar territory.
+
+Here is the Module ${currentModule} conversation:
+
+${historyText}
+
+Generate a structured JSON summary with these keys:
+{
+  "keyInsights": ["insight1", "insight2", ...],  // 3-5 key learnings
+  "doctorApproach": "string",  // How he reads/approaches doctors (module 1) or product approach (module 2)
+  "quotableLines": ["exact phrase 1", ...],  // 2-3 exact phrases he used that are gold
+  "gapsToExplore": ["topic1", ...]  // What needs deeper probing in follow-up
+}
+
+Return ONLY valid JSON. No markdown, no explanation.`
+        }]
+      })
+    });
+    const data = await resp.json();
+    const summaryText = data.content?.[0]?.text || '{}';
+    let summary;
+    try { summary = JSON.parse(summaryText); } catch(e) { summary = {}; }
+
+    await DB.ref(`${DB_PATH}/sessions/${sessionId}/modules/${currentModule}/summary`).set(summary);
+  } catch(e) { console.error('Summary generation failed:', e); }
+}
+
+/* ═══════════════════════════════════════════════
+   FIREBASE SAVE
+═══════════════════════════════════════════════ */
+function saveToFirebase(userMsg, aiMsg) {
+  if (!sessionId) return;
+  const key = Date.now();
+  DB.ref(`${DB_PATH}/sessions/${sessionId}/modules/${currentModule}/exchanges/${key}`).set({
+    q: aiMsg,
+    a: userMsg || '',
+    ts: new Date().toISOString()
+  }).catch(console.error);
+}
+
+/* ═══════════════════════════════════════════════
+   ADMIN PANEL
+═══════════════════════════════════════════════ */
+async function loadAdminData() {
+  const body = document.getElementById('admin-body');
+  body.innerHTML = `
+    <button class="refresh-btn" onclick="loadAdminData()">↻ Refresh</button>
+    <div class="empty-state"><div class="icon">⏳</div><p>Loading...</p></div>
+  `;
+
+  try {
+    const snap = await DB.ref(`${DB_PATH}/sessions`).get();
+    const sessions = snap.val();
+
+    if (!sessions) {
+      body.innerHTML = `<button class="refresh-btn" onclick="loadAdminData()">↻ Refresh</button>
+        <div class="empty-state"><div class="icon">📭</div><p>Abhi koi session nahi hai.<br/>Amardeep ji se interview shuru karne ko bolein.</p></div>`;
+      return;
+    }
+
+    const sessionList = Object.entries(sessions).map(([id, data]) => ({ id, ...data }))
+      .sort((a,b) => new Date(b.meta?.started||0) - new Date(a.meta?.started||0));
+
+    // Stats
+    const totalSessions = sessionList.length;
+    const totalModsDone = sessionList.reduce((acc, s) => {
+      if (!s.modules) return acc;
+      return acc + Object.values(s.modules).filter(m => m.status === 'complete').length;
+    }, 0);
+    const totalExchanges = sessionList.reduce((acc, s) => {
+      if (!s.modules) return acc;
+      return acc + Object.values(s.modules).reduce((a, m) => {
+        return a + Object.keys(m.exchanges || {}).length;
+      }, 0);
+    }, 0);
+
+    let html = `
+      <button class="refresh-btn" onclick="loadAdminData()">↻ Refresh</button>
+      <div class="stat-row">
+        <div class="stat-box"><div class="stat-val">${totalSessions}</div><div class="stat-label">Sessions</div></div>
+        <div class="stat-box"><div class="stat-val">${totalModsDone}</div><div class="stat-label">Modules Done</div></div>
+        <div class="stat-box"><div class="stat-val">${totalExchanges}</div><div class="stat-label">Exchanges</div></div>
+      </div>
+    `;
+
+    for (const session of sessionList) {
+      const startTime = session.meta?.started
+        ? new Date(session.meta.started).toLocaleString('en-IN')
+        : 'Unknown';
+      const mods = session.modules || {};
+      const modPills = Object.entries(mods).map(([m, data]) =>
+        `<span class="session-mod-pill">${MODULES_CONFIG[m]?.icon} ${MODULES_CONFIG[m]?.name} ${data.status === 'complete' ? '✓' : '...'}</span>`
+      ).join('');
+
+      html += `
+        <div class="admin-section">
+          <div class="session-card" onclick="toggleSession('${session.id}')">
+            <div class="session-card-top">
+              <div class="session-name">📋 ${session.meta?.respondent || 'Session'}</div>
+              <div class="session-time">${startTime}</div>
+            </div>
+            <div class="session-mods">${modPills || '<span style="font-size:12px;color:var(--muted)">No modules yet</span>'}</div>
+          </div>
+          <div id="session-detail-${session.id}" style="display:none">
+            ${renderSessionDetail(session)}
+          </div>
+        </div>
+      `;
+    }
+
+    body.innerHTML = html;
+  } catch(e) {
+    console.error(e);
+    body.innerHTML = `<div class="empty-state"><div class="icon">❌</div><p>Load failed. Please refresh.</p></div>`;
+  }
+}
+
+function toggleSession(id) {
+  const el = document.getElementById(`session-detail-${id}`);
+  if (el) el.style.display = el.style.display === 'none' ? 'block' : 'none';
+}
+
+function renderSessionDetail(session) {
+  const mods = session.modules || {};
+  if (!Object.keys(mods).length) return '<p style="color:var(--muted);font-size:13px;padding:12px 0">No module data yet.</p>';
+
+  let html = '';
+  for (const [modNum, modData] of Object.entries(mods)) {
+    const cfg = MODULES_CONFIG[modNum];
+    if (!cfg) continue;
+
+    html += `
+      <div class="admin-mod-header">
+        <div class="admin-mod-icon ${cfg.color}">${cfg.icon}</div>
+        <div class="admin-mod-title">${cfg.name} ${modData.status === 'complete' ? '✅' : '🔄'}</div>
+      </div>
+    `;
+
+    // Summary
+    const s = modData.summary;
+    if (s) {
+      if (s.keyInsights?.length) {
+        html += `<div class="summary-block">
+          <h4>💡 Key Insights</h4>
+          <p>${s.keyInsights.map(i => `• ${i}`).join('<br/>')}</p>
+        </div>`;
+      }
+      if (s.quotableLines?.length) {
+        html += `<div class="summary-block">
+          <h4>🗣️ Quotable Lines</h4>
+          <p>${s.quotableLines.map(q => `"${q}"`).join('<br/>')}</p>
+        </div>`;
+      }
+      if (s.gapsToExplore?.length) {
+        html += `<div class="summary-block">
+          <h4>🔍 Gaps to Explore</h4>
+          <p>${s.gapsToExplore.map(g => `• ${g}`).join('<br/>')}</p>
+        </div>`;
+      }
+    }
+
+    // Exchanges
+    const exchanges = modData.exchanges || {};
+    const exchList = Object.values(exchanges).sort((a,b) => new Date(a.ts) - new Date(b.ts));
+    exchList.forEach(ex => {
+      if (!ex.a) return; // skip AI-only messages
+      html += `<div class="response-card">
+        <div class="response-q">🤖 ${truncate(ex.q, 120)}</div>
+        <div class="response-a">👤 ${ex.a}</div>
+      </div>`;
+    });
+  }
+  return html;
+}
+
+function truncate(str, n) {
+  return str?.length > n ? str.substring(0, n) + '...' : str;
+}
+
+/* ═══════════════════════════════════════════════
+   ROUTING — admin via URL hash
+═══════════════════════════════════════════════ */
+function checkRoute() {
+  if (window.location.hash === '#admin') {
+    showAdmin();
+  }
+}
+window.addEventListener('hashchange', checkRoute);
+checkRoute();
+
+// Initialize session ID from localStorage for continuity
+const savedSession = localStorage.getItem('coach_session_id');
+if (savedSession) sessionId = savedSession;
+
+// Save session ID when created
+const origStartModule = startModule;
+window.startModule = async function(modNum) {
+  await origStartModule(modNum);
+  if (sessionId) localStorage.setItem('coach_session_id', sessionId);
+};
+</script>
+</body>
+</html>
