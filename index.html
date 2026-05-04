@@ -43,15 +43,15 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Plus J
 
 /* ── WELCOME SCREEN ── */
 #welcome{background:var(--bg);overflow-y:auto;overflow-x:hidden}
-.welcome-body{padding:28px 24px 40px;display:flex;flex-direction:column;align-items:center;text-align:center;max-width:640px;margin:0 auto;width:100%}
-.welcome-hero{width:100%;background:linear-gradient(135deg,#00B386 0%,#00956F 100%);border-radius:20px;padding:32px 24px;margin-bottom:28px;color:white;position:relative;overflow:hidden;max-width:600px}
+.welcome-body{padding:16px 24px 24px;display:flex;flex-direction:column;align-items:center;text-align:center;max-width:640px;margin:0 auto;width:100%;flex:1}
+.welcome-hero{width:100%;background:linear-gradient(135deg,#00B386 0%,#00956F 100%);border-radius:16px;padding:24px 20px;margin-bottom:16px;color:white;position:relative;overflow:hidden;max-width:600px}
 .welcome-hero::before{content:'';position:absolute;top:-20px;right:-20px;width:120px;height:120px;background:rgba(255,255,255,0.08);border-radius:50%}
 .welcome-hero::after{content:'';position:absolute;bottom:-30px;left:-10px;width:100px;height:100px;background:rgba(255,255,255,0.06);border-radius:50%}
-.welcome-hero-logo{margin-bottom:16px;position:relative;z-index:1}
+.welcome-hero-logo{margin-bottom:10px;position:relative;z-index:1}
 .welcome-hero-logo svg{width:52px;height:52px;filter:brightness(0) invert(1)}
-.welcome-hero h1{font-size:26px;font-weight:800;margin-bottom:4px;position:relative;z-index:1}
+.welcome-hero h1{font-size:22px;font-weight:800;margin-bottom:2px;position:relative;z-index:1}
 .welcome-hero p{font-size:13px;opacity:.85;position:relative;z-index:1}
-.welcome-greeting{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px;margin-bottom:24px;width:100%;text-align:left;box-shadow:var(--shadow-s)}
+.welcome-greeting{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;margin-bottom:16px;width:100%;text-align:left;box-shadow:var(--shadow-s)}
 .welcome-greeting .g-label{font-size:10px;font-weight:700;color:var(--green);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px}
 .welcome-greeting p{font-family:'Noto Sans Devanagari',sans-serif;font-size:14px;line-height:1.8;color:var(--text2)}
 .btn-primary{width:100%;padding:16px;background:var(--green);border:none;border-radius:14px;font-size:16px;font-weight:700;color:#fff;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;transition:background .15s,transform .1s;box-shadow:0 4px 14px rgba(0,179,134,0.35)}
@@ -936,8 +936,12 @@ let isWaitingForAI = false;
    SCREEN NAVIGATION
 ═══════════════════════════════════════════════ */
 function showScreen(id) {
-  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-  document.getElementById(id).classList.add('active');
+  document.querySelectorAll('.screen').forEach(s => {
+    s.classList.remove('active');
+    s.scrollTop = 0;
+  });
+  const el = document.getElementById(id);
+  if(el) { el.classList.add('active'); el.scrollTop = 0; }
   currentScreen = id;
 }
 function showWelcome()   { showScreen('welcome'); }
