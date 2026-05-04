@@ -608,7 +608,7 @@ const MODULES_CONFIG = {
     name:"Doctor Reading",
     icon:"🧠",
     color:"m1",
-    systemPrompt: `Tu ek intelligent interviewer hai jo Amardeep Sinha — Aldan Healthcare ke Bihar territory ke best Area Sales Manager — se unka sales playbook capture kar raha hai.
+    systemPrompt: `Tu ek intelligent interviewer hai jo Amardeep Sinha — Aldan Healthcare ke Bihar territory ke ZSM (Zonal Sales Manager) — se unka sales playbook capture kar raha hai.
 
 CONTEXT:
 - Company: Aldan Healthcare, WomEm division
@@ -648,7 +648,7 @@ Start with Q1. Be conversational.`,
     name:"Product Detailing",
     icon:"💊",
     color:"m2",
-    systemPrompt: `Tu ek intelligent interviewer hai jo Amardeep Sinha — Aldan Healthcare WomEm Bihar ke best ASM — se unka product-wise detailing playbook capture kar raha hai.
+    systemPrompt: `Tu ek intelligent interviewer hai jo Amardeep Sinha — Aldan Healthcare WomEm Bihar ke ZSM (Zonal Sales Manager) — se unka product-wise detailing playbook capture kar raha hai.
 
 COMPLETE WOMEM PORTFOLIO — VERIFIED FROM VISUAL AID + LEAVE-BEHINDS + SCIENTIFIC LIT:
 
@@ -1207,7 +1207,7 @@ async function generateModuleSummary() {
         max_tokens: 800,
         messages: [{
           role: 'user',
-          content: `You are analyzing a sales playbook capture interview with Amardeep Sinha, senior ASM at Aldan Healthcare WomEm division, Bihar territory.
+          content: `You are analyzing a sales playbook capture interview with Amardeep Sinha, ZSM at Aldan Healthcare WomEm division, Bihar territory.
 
 Here is the Module ${currentModule} conversation:
 
