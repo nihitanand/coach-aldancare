@@ -1,172 +1,187 @@
 <!DOCTYPE html>
-<html lang="hi">
+<html lang="en">
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
 <title>Aldan Coach – Playbook Capture</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;600;700&family=DM+Sans:wght@400;500;600;700&family=DM+Serif+Display&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
 <style>
 :root {
-  --navy:   #0d1b2a;
-  --navy2:  #162032;
-  --navy3:  #1e2d42;
-  --saffron:#e8850a;
-  --saffron2:#f5a623;
-  --gold:   #f0c040;
-  --cream:  #fdf6ec;
-  --white:  #ffffff;
-  --muted:  #8a9bb0;
-  --border: rgba(255,255,255,0.08);
-  --radius: 16px;
-  --shadow: 0 8px 32px rgba(0,0,0,0.35);
+  --green:    #00B386;
+  --green-d:  #00956F;
+  --green-l:  #E6FAF5;
+  --green-m:  #B2EFE0;
+  --bg:       #F8F9FA;
+  --surface:  #FFFFFF;
+  --text:     #1F2937;
+  --text2:    #6B7280;
+  --text3:    #9CA3AF;
+  --border:   #E5E7EB;
+  --shadow:   0 1px 4px rgba(0,0,0,0.08), 0 4px 16px rgba(0,0,0,0.06);
+  --shadow-s: 0 1px 3px rgba(0,0,0,0.06);
+  --radius:   16px;
+  --radius-s: 12px;
 }
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-html,body{height:100%;background:var(--navy);color:var(--white);font-family:'DM Sans',sans-serif;overflow:hidden}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Plus Jakarta Sans',sans-serif;overflow:hidden}
 #app{height:100%;display:flex;flex-direction:column;position:relative}
 
 /* ── SCREENS ── */
-.screen{position:absolute;inset:0;display:flex;flex-direction:column;opacity:0;pointer-events:none;transition:opacity .35s ease,transform .35s ease;transform:translateY(16px)}
+.screen{position:absolute;inset:0;display:flex;flex-direction:column;opacity:0;pointer-events:none;transition:opacity .3s ease,transform .3s ease;transform:translateY(12px)}
 .screen.active{opacity:1;pointer-events:all;transform:translateY(0)}
 
-/* ── WELCOME SCREEN ── */
-#welcome{background:linear-gradient(155deg,#0d1b2a 0%,#1a2c45 50%,#0f2235 100%);align-items:center;justify-content:center;padding:32px 24px;text-align:center}
-.logo-ring{width:96px;height:96px;border-radius:50%;background:linear-gradient(135deg,var(--saffron),var(--gold));display:flex;align-items:center;justify-content:center;margin:0 auto 28px;box-shadow:0 0 0 12px rgba(232,133,10,0.12),0 0 0 24px rgba(232,133,10,0.06)}
-.logo-ring span{font-size:40px}
-.welcome-tag{font-size:11px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--saffron2);margin-bottom:12px}
-.welcome-title{font-family:'DM Serif Display',serif;font-size:32px;line-height:1.2;margin-bottom:8px}
-.welcome-title em{color:var(--saffron2);font-style:normal}
-.welcome-sub{font-size:15px;color:var(--muted);line-height:1.6;margin-bottom:36px}
-.hindi-greeting{background:rgba(255,255,255,0.06);border:1px solid var(--border);border-radius:12px;padding:16px 20px;margin-bottom:36px;font-family:'Noto Sans Devanagari',sans-serif;font-size:16px;line-height:1.7;color:rgba(255,255,255,0.85)}
-.btn-primary{width:100%;padding:18px;background:linear-gradient(135deg,var(--saffron),var(--saffron2));border:none;border-radius:14px;font-size:17px;font-weight:700;color:var(--white);cursor:pointer;letter-spacing:.3px;box-shadow:0 4px 20px rgba(232,133,10,0.4);transition:transform .15s,box-shadow .15s}
-.btn-primary:active{transform:scale(.97);box-shadow:0 2px 10px rgba(232,133,10,0.3)}
-.version-tag{font-size:11px;color:var(--muted);margin-top:20px}
+/* ── ALDAN LOGO SVG ── */
+.aldan-logo{display:flex;align-items:center;gap:10px}
+.aldan-logo svg{width:36px;height:36px;flex-shrink:0}
+.aldan-logo-text{display:flex;flex-direction:column;line-height:1}
+.aldan-logo-text .brand{font-size:16px;font-weight:800;color:var(--text);letter-spacing:-.3px}
+.aldan-logo-text .tagline{font-size:9px;font-weight:600;color:var(--green);letter-spacing:.5px;text-transform:uppercase;margin-top:1px}
 
-/* ── MODULE SELECT ── */
-#modules{background:var(--navy);padding:0}
-.modules-header{padding:52px 24px 20px;background:linear-gradient(180deg,var(--navy2) 0%,var(--navy) 100%)}
-.back-btn{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--muted);cursor:pointer;margin-bottom:20px;background:none;border:none;color:var(--muted);padding:0}
-.back-btn:hover{color:var(--white)}
-.modules-title{font-family:'DM Serif Display',serif;font-size:26px;margin-bottom:6px}
-.modules-sub{font-size:14px;color:var(--muted);line-height:1.5}
-.modules-scroll{flex:1;overflow-y:auto;padding:20px 24px 40px}
-.module-card{background:var(--navy2);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:16px;cursor:pointer;transition:all .2s;position:relative;overflow:hidden}
-.module-card::before{content:'';position:absolute;inset:0;opacity:0;transition:opacity .2s;background:linear-gradient(135deg,rgba(232,133,10,0.08),transparent)}
-.module-card:active,.module-card:hover{border-color:rgba(232,133,10,0.35);transform:translateY(-1px)}
-.module-card:active::before,.module-card:hover::before{opacity:1}
-.module-card.completed{border-color:rgba(16,185,129,0.3);background:rgba(16,185,129,0.06)}
-.module-card.in-progress{border-color:rgba(232,133,10,0.3)}
-.mod-top{display:flex;align-items:flex-start;gap:14px;margin-bottom:12px}
-.mod-icon{width:46px;height:46px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
-.mod-icon.m1{background:rgba(99,102,241,0.15)}
-.mod-icon.m2{background:rgba(232,133,10,0.15)}
-.mod-icon.m3{background:rgba(239,68,68,0.15)}
-.mod-icon.m4{background:rgba(16,185,129,0.15)}
-.mod-info{flex:1}
-.mod-num{font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:3px}
-.mod-name{font-size:17px;font-weight:700;margin-bottom:4px}
-.mod-desc{font-size:13px;color:var(--muted);line-height:1.5}
-.mod-badge{padding:4px 10px;border-radius:999px;font-size:11px;font-weight:700;align-self:flex-start;flex-shrink:0}
-.badge-new{background:rgba(99,102,241,0.15);color:#a5b4fc}
-.badge-done{background:rgba(16,185,129,0.15);color:#34d399}
-.badge-prog{background:rgba(232,133,10,0.15);color:var(--saffron2)}
-.mod-footer{display:flex;align-items:center;justify-content:space-between;padding-top:12px;border-top:1px solid var(--border)}
-.mod-time{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:5px}
-.mod-arrow{font-size:18px;color:var(--saffron)}
+/* ── TOP NAV (shared) ── */
+.top-nav{display:flex;align-items:center;justify-content:space-between;padding:48px 20px 14px;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0;box-shadow:var(--shadow-s)}
+.nav-right{font-size:12px;color:var(--text3);font-weight:500}
+
+/* ── WELCOME SCREEN ── */
+#welcome{background:var(--bg);overflow-y:auto}
+.welcome-body{padding:28px 24px 40px;display:flex;flex-direction:column;align-items:center;text-align:center}
+.welcome-hero{width:100%;background:linear-gradient(135deg,#00B386 0%,#00956F 100%);border-radius:20px;padding:32px 24px;margin-bottom:28px;color:white;position:relative;overflow:hidden}
+.welcome-hero::before{content:'';position:absolute;top:-20px;right:-20px;width:120px;height:120px;background:rgba(255,255,255,0.08);border-radius:50%}
+.welcome-hero::after{content:'';position:absolute;bottom:-30px;left:-10px;width:100px;height:100px;background:rgba(255,255,255,0.06);border-radius:50%}
+.welcome-hero-logo{margin-bottom:16px;position:relative;z-index:1}
+.welcome-hero-logo svg{width:52px;height:52px;filter:brightness(0) invert(1)}
+.welcome-hero h1{font-size:26px;font-weight:800;margin-bottom:4px;position:relative;z-index:1}
+.welcome-hero p{font-size:13px;opacity:.85;position:relative;z-index:1}
+.welcome-greeting{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px;margin-bottom:24px;width:100%;text-align:left;box-shadow:var(--shadow-s)}
+.welcome-greeting .g-label{font-size:10px;font-weight:700;color:var(--green);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px}
+.welcome-greeting p{font-family:'Noto Sans Devanagari',sans-serif;font-size:14px;line-height:1.8;color:var(--text2)}
+.btn-primary{width:100%;padding:16px;background:var(--green);border:none;border-radius:14px;font-size:16px;font-weight:700;color:#fff;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;transition:background .15s,transform .1s;box-shadow:0 4px 14px rgba(0,179,134,0.35)}
+.btn-primary:active{background:var(--green-d);transform:scale(.98)}
+.version-tag{font-size:11px;color:var(--text3);margin-top:16px}
+
+/* ── MODULES SCREEN ── */
+#modules{background:var(--bg)}
+.modules-scroll{flex:1;overflow-y:auto;padding:16px 16px 40px}
+.back-btn{display:flex;align-items:center;gap:5px;font-size:13px;font-weight:600;color:var(--green);cursor:pointer;background:none;border:none;font-family:'Plus Jakarta Sans',sans-serif;padding:0}
+.modules-title{font-size:22px;font-weight:800;color:var(--text);margin-bottom:4px}
+.modules-sub{font-size:13px;color:var(--text2)}
+.module-card{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius);padding:18px;margin-bottom:14px;cursor:pointer;transition:all .2s;box-shadow:var(--shadow-s);position:relative;overflow:hidden}
+.module-card:active{transform:scale(.99);border-color:var(--green)}
+.module-card:hover{border-color:var(--green-m);box-shadow:var(--shadow)}
+.module-card.completed{border-color:#D1FAE5;background:#F0FDF9}
+.module-card.in-progress{border-color:#FDE68A;background:#FFFBEB}
+.module-card .card-accent{position:absolute;left:0;top:0;bottom:0;width:4px;border-radius:16px 0 0 16px}
+.card-accent.m1{background:#6366F1}
+.card-accent.m2{background:var(--green)}
+.card-accent.m3{background:#EF4444}
+.card-accent.m4{background:#F59E0B}
+.mod-top{display:flex;align-items:flex-start;gap:12px;margin-bottom:12px;padding-left:8px}
+.mod-icon{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.mod-icon.m1{background:#EEF2FF}
+.mod-icon.m2{background:var(--green-l)}
+.mod-icon.m3{background:#FEF2F2}
+.mod-icon.m4{background:#FFFBEB}
+.mod-info{flex:1;min-width:0}
+.mod-num{font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3);margin-bottom:2px}
+.mod-name{font-size:16px;font-weight:700;color:var(--text);margin-bottom:3px}
+.mod-desc{font-size:12px;color:var(--text2);line-height:1.5}
+.mod-badge{padding:3px 9px;border-radius:999px;font-size:10px;font-weight:700;align-self:flex-start;flex-shrink:0}
+.badge-new{background:#EEF2FF;color:#6366F1}
+.badge-done{background:#D1FAE5;color:#059669}
+.badge-prog{background:#FEF3C7;color:#D97706}
+.mod-footer{display:flex;align-items:center;justify-content:space-between;padding-top:10px;border-top:1px solid var(--border);padding-left:8px}
+.mod-time{font-size:12px;color:var(--text3);display:flex;align-items:center;gap:4px}
+.mod-arrow{font-size:16px;color:var(--green);font-weight:700}
 
 /* ── INTERVIEW SCREEN ── */
-#interview{background:var(--navy);flex-direction:column}
-.interview-header{padding:52px 20px 16px;background:var(--navy2);border-bottom:1px solid var(--border);flex-shrink:0}
-.interview-header .back-btn{margin-bottom:12px}
+#interview{background:var(--bg);flex-direction:column}
+.interview-header{padding:48px 16px 14px;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0;box-shadow:var(--shadow-s)}
+.interview-header .back-btn{margin-bottom:10px}
 .interview-meta{display:flex;align-items:center;justify-content:space-between}
-.interview-mod-name{font-size:15px;font-weight:700}
-.interview-progress{font-size:12px;color:var(--muted)}
-.progress-bar{height:3px;background:rgba(255,255,255,0.08);border-radius:999px;margin-top:10px;overflow:hidden}
-.progress-fill{height:100%;background:linear-gradient(90deg,var(--saffron),var(--gold));border-radius:999px;transition:width .4s ease}
+.interview-mod-name{font-size:15px;font-weight:700;color:var(--text)}
+.interview-progress{font-size:12px;color:var(--text3);font-weight:500}
+.progress-bar{height:3px;background:var(--border);border-radius:999px;margin-top:10px;overflow:hidden}
+.progress-fill{height:100%;background:var(--green);border-radius:999px;transition:width .4s ease}
 
 /* CHAT AREA */
-.chat-area{flex:1;overflow-y:auto;padding:20px 16px;display:flex;flex-direction:column;gap:16px;scroll-behavior:smooth}
+.chat-area{flex:1;overflow-y:auto;padding:16px 14px;display:flex;flex-direction:column;gap:14px;scroll-behavior:smooth;background:var(--bg)}
 .chat-area::-webkit-scrollbar{width:0}
-.bubble{max-width:88%;animation:bubbleIn .3s ease}
-@keyframes bubbleIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.bubble{max-width:86%;animation:bubbleIn .25s ease}
+@keyframes bubbleIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
 .bubble.ai{align-self:flex-start}
 .bubble.user{align-self:flex-end}
-.bubble-inner{padding:14px 16px;border-radius:18px;font-size:15px;line-height:1.65}
-.bubble.ai .bubble-inner{background:var(--navy3);border:1px solid var(--border);border-bottom-left-radius:4px;color:var(--white)}
-.bubble.user .bubble-inner{background:linear-gradient(135deg,var(--saffron),var(--saffron2));border-bottom-right-radius:4px;color:var(--white)}
-.bubble-sender{font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:6px}
-.bubble.ai .bubble-sender{color:var(--saffron2)}
-.bubble.user .bubble-sender{color:rgba(255,255,255,0.7);text-align:right}
-.bubble-hint{font-size:12px;color:var(--muted);margin-top:6px;padding-left:2px;font-style:italic}
+.bubble-sender{font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px}
+.bubble.ai .bubble-sender{color:var(--green)}
+.bubble.user .bubble-sender{color:var(--text3);text-align:right}
+.bubble-inner{padding:12px 15px;border-radius:18px;font-size:14px;line-height:1.65}
+.bubble.ai .bubble-inner{background:var(--surface);border:1px solid var(--border);border-bottom-left-radius:4px;color:var(--text);box-shadow:var(--shadow-s)}
+.bubble.user .bubble-inner{background:var(--green);border-bottom-right-radius:4px;color:#fff}
 
 /* typing indicator */
-.typing-indicator{display:none;align-self:flex-start;padding:12px 16px;background:var(--navy3);border:1px solid var(--border);border-radius:18px;border-bottom-left-radius:4px}
+.typing-indicator{display:none;align-self:flex-start;padding:12px 16px;background:var(--surface);border:1px solid var(--border);border-radius:18px;border-bottom-left-radius:4px;box-shadow:var(--shadow-s)}
 .typing-dots{display:flex;gap:4px}
-.typing-dots span{width:7px;height:7px;background:var(--muted);border-radius:50%;animation:dot 1.2s infinite}
+.typing-dots span{width:7px;height:7px;background:var(--text3);border-radius:50%;animation:dot 1.2s infinite}
 .typing-dots span:nth-child(2){animation-delay:.2s}
 .typing-dots span:nth-child(3){animation-delay:.4s}
-@keyframes dot{0%,60%,100%{transform:translateY(0);opacity:.4}30%{transform:translateY(-6px);opacity:1}}
+@keyframes dot{0%,60%,100%{transform:translateY(0);opacity:.4}30%{transform:translateY(-5px);opacity:1}}
 .typing-indicator.show{display:flex}
 
 /* MODULE COMPLETE */
-.mod-complete-card{background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.25);border-radius:var(--radius);padding:20px;text-align:center;margin:8px 0}
-.mod-complete-card .icon{font-size:40px;margin-bottom:12px}
-.mod-complete-card h3{font-size:18px;font-weight:700;color:#34d399;margin-bottom:6px}
-.mod-complete-card p{font-size:14px;color:var(--muted);line-height:1.5}
+.mod-complete-card{background:#F0FDF9;border:1.5px solid #D1FAE5;border-radius:var(--radius);padding:20px;text-align:center;margin:8px 0}
+.mod-complete-card .icon{font-size:36px;margin-bottom:10px}
+.mod-complete-card h3{font-size:17px;font-weight:700;color:var(--green);margin-bottom:5px}
+.mod-complete-card p{font-size:13px;color:var(--text2);line-height:1.5}
 
 /* INPUT AREA */
-.input-area{padding:12px 16px 28px;background:var(--navy2);border-top:1px solid var(--border);flex-shrink:0}
-.input-row{display:flex;gap:10px;align-items:flex-end}
-.input-box{flex:1;background:var(--navy3);border:1px solid var(--border);border-radius:14px;padding:12px 14px;font-size:15px;color:var(--white);font-family:'DM Sans',sans-serif;resize:none;min-height:50px;max-height:120px;outline:none;transition:border-color .2s;line-height:1.5}
-.input-box::placeholder{color:var(--muted)}
-.input-box:focus{border-color:rgba(232,133,10,0.4)}
-.mic-btn{width:50px;height:50px;border-radius:50%;border:2px solid var(--border);background:var(--navy3);cursor:pointer;font-size:22px;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .2s;position:relative}
-.mic-btn.recording{background:rgba(239,68,68,0.15);border-color:rgba(239,68,68,0.5);animation:pulse 1s infinite}
-@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,0.3)}50%{box-shadow:0 0 0 8px rgba(239,68,68,0)}}
-.send-btn{width:50px;height:50px;border-radius:50%;background:linear-gradient(135deg,var(--saffron),var(--saffron2));border:none;cursor:pointer;font-size:20px;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:transform .15s,opacity .15s;box-shadow:0 4px 12px rgba(232,133,10,0.35)}
-.send-btn:active{transform:scale(.93)}
+.input-area{padding:10px 14px 28px;background:var(--surface);border-top:1px solid var(--border);flex-shrink:0}
+.voice-hint{font-size:11px;color:var(--text3);text-align:center;margin-bottom:8px;font-weight:500}
+.input-row{display:flex;gap:8px;align-items:flex-end}
+.input-box{flex:1;background:var(--bg);border:1.5px solid var(--border);border-radius:14px;padding:11px 14px;font-size:14px;color:var(--text);font-family:'Plus Jakarta Sans',sans-serif;resize:none;min-height:46px;max-height:120px;outline:none;transition:border-color .2s;line-height:1.5}
+.input-box::placeholder{color:var(--text3)}
+.input-box:focus{border-color:var(--green);background:var(--surface)}
+.mic-btn{width:46px;height:46px;border-radius:50%;border:1.5px solid var(--border);background:var(--surface);cursor:pointer;font-size:20px;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .2s}
+.mic-btn:hover{border-color:var(--green);background:var(--green-l)}
+.mic-btn.recording{background:#FEF2F2;border-color:#FCA5A5;animation:pulse 1s infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,0.2)}50%{box-shadow:0 0 0 8px rgba(239,68,68,0)}}
+.send-btn{width:46px;height:46px;border-radius:50%;background:var(--green);border:none;cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background .15s,transform .1s;box-shadow:0 3px 10px rgba(0,179,134,0.3)}
+.send-btn:active{background:var(--green-d);transform:scale(.95)}
 .send-btn:disabled{opacity:.4;cursor:not-allowed}
-.voice-hint{font-size:11px;color:var(--muted);text-align:center;margin-bottom:8px}
 
 /* ── ADMIN SCREEN ── */
-#admin{background:var(--navy);overflow-y:auto}
-.admin-header{padding:52px 24px 20px;background:var(--navy2);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:10}
-.admin-header h1{font-family:'DM Serif Display',serif;font-size:24px;margin-bottom:4px}
-.admin-header p{font-size:13px;color:var(--muted)}
-.admin-body{padding:20px 24px 60px}
-.admin-section{margin-bottom:32px}
-.admin-section-title{font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--saffron2);margin-bottom:14px}
-.session-card{background:var(--navy2);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:12px;cursor:pointer;transition:border-color .2s}
-.session-card:hover{border-color:rgba(232,133,10,0.3)}
+#admin{background:var(--bg);overflow-y:auto}
+.admin-header{padding:48px 20px 16px;background:var(--surface);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:10;box-shadow:var(--shadow-s)}
+.admin-header h1{font-size:22px;font-weight:800;color:var(--text);margin-bottom:2px}
+.admin-header p{font-size:13px;color:var(--text2)}
+.admin-body{padding:16px 16px 60px}
+.admin-section{margin-bottom:28px}
+.admin-section-title{font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--green);margin-bottom:12px}
+.session-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:15px;margin-bottom:10px;cursor:pointer;transition:all .2s;box-shadow:var(--shadow-s)}
+.session-card:hover{border-color:var(--green-m);box-shadow:var(--shadow)}
 .session-card-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px}
-.session-name{font-size:15px;font-weight:700}
-.session-time{font-size:12px;color:var(--muted)}
+.session-name{font-size:14px;font-weight:700;color:var(--text)}
+.session-time{font-size:11px;color:var(--text3)}
 .session-mods{display:flex;gap:6px;flex-wrap:wrap}
-.session-mod-pill{font-size:11px;padding:3px 8px;border-radius:999px;background:rgba(232,133,10,0.12);color:var(--saffron2);font-weight:600}
-.response-card{background:var(--navy3);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:10px}
-.response-q{font-size:12px;color:var(--saffron2);font-weight:600;margin-bottom:6px;line-height:1.4}
-.response-a{font-size:14px;color:rgba(255,255,255,0.85);line-height:1.6}
-.response-followups{margin-top:8px;padding-top:8px;border-top:1px solid var(--border)}
-.response-fu-item{font-size:12px;margin-bottom:4px}
-.response-fu-item span:first-child{color:var(--muted)}
-.response-fu-item span:last-child{color:rgba(255,255,255,0.75)}
-.admin-mod-header{display:flex;align-items:center;gap:10px;margin:20px 0 12px;padding-bottom:10px;border-bottom:1px solid var(--border)}
-.admin-mod-icon{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px}
-.admin-mod-title{font-size:15px;font-weight:700}
-.empty-state{text-align:center;padding:60px 24px;color:var(--muted)}
-.empty-state .icon{font-size:48px;margin-bottom:16px}
-.empty-state p{font-size:15px;line-height:1.6}
-.refresh-btn{display:flex;align-items:center;gap:6px;background:var(--navy3);border:1px solid var(--border);border-radius:10px;padding:8px 14px;font-size:13px;color:var(--muted);cursor:pointer;margin-bottom:20px;transition:all .2s}
-.refresh-btn:hover{border-color:var(--saffron);color:var(--saffron)}
-.stat-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:24px}
-.stat-box{background:var(--navy2);border:1px solid var(--border);border-radius:12px;padding:14px;text-align:center}
-.stat-val{font-size:24px;font-weight:800;color:var(--saffron2);margin-bottom:4px}
-.stat-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
-.summary-block{background:var(--navy2);border:1px solid rgba(16,185,129,0.2);border-radius:12px;padding:16px;margin-bottom:12px}
-.summary-block h4{font-size:13px;font-weight:700;color:#34d399;margin-bottom:8px;display:flex;align-items:center;gap:6px}
-.summary-block p{font-size:14px;color:rgba(255,255,255,0.8);line-height:1.6}
+.session-mod-pill{font-size:10px;padding:3px 8px;border-radius:999px;background:var(--green-l);color:var(--green);font-weight:700}
+.response-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-s);padding:13px;margin-bottom:8px;box-shadow:var(--shadow-s)}
+.response-q{font-size:11px;color:var(--green);font-weight:700;margin-bottom:5px;line-height:1.4}
+.response-a{font-size:13px;color:var(--text);line-height:1.6}
+.admin-mod-header{display:flex;align-items:center;gap:10px;margin:18px 0 10px;padding-bottom:8px;border-bottom:1px solid var(--border)}
+.admin-mod-icon{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;background:var(--green-l)}
+.admin-mod-title{font-size:14px;font-weight:700;color:var(--text)}
+.empty-state{text-align:center;padding:60px 24px}
+.empty-state .icon{font-size:44px;margin-bottom:14px}
+.empty-state p{font-size:14px;color:var(--text2);line-height:1.6}
+.refresh-btn{display:inline-flex;align-items:center;gap:6px;background:var(--surface);border:1.5px solid var(--border);border-radius:10px;padding:8px 14px;font-size:12px;font-weight:600;color:var(--text2);cursor:pointer;margin-bottom:16px;font-family:'Plus Jakarta Sans',sans-serif;transition:all .2s}
+.refresh-btn:hover{border-color:var(--green);color:var(--green)}
+.stat-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:20px}
+.stat-box{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-s);padding:12px;text-align:center;box-shadow:var(--shadow-s)}
+.stat-val{font-size:22px;font-weight:800;color:var(--green);margin-bottom:2px}
+.stat-label{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;font-weight:600}
+.summary-block{background:var(--surface);border:1px solid #D1FAE5;border-radius:var(--radius-s);padding:14px;margin-bottom:10px;box-shadow:var(--shadow-s)}
+.summary-block h4{font-size:12px;font-weight:700;color:var(--green);margin-bottom:6px;display:flex;align-items:center;gap:5px}
+.summary-block p{font-size:13px;color:var(--text);line-height:1.6}
 </style>
 </head>
 <body>
@@ -174,34 +189,74 @@ html,body{height:100%;background:var(--navy);color:var(--white);font-family:'DM 
 
   <!-- WELCOME -->
   <div class="screen active" id="welcome">
-    <div class="logo-ring"><span>🎯</span></div>
-    <div class="welcome-tag">Aldan Healthcare · WomEm Bihar</div>
-    <h1 class="welcome-title">Aldan <em>Coach</em></h1>
-    <p class="welcome-sub">Amardeep ji ke saath ek conversation — jinke jawab se hum Bihar ka best sales playbook banayenge</p>
-    <div class="hindi-greeting">
-      नमस्ते Amardeep ji 🙏<br/>
-      यह conversation आपकी expertise को capture करने के लिए है — ताकि Bihar के सभी MBEs आपसे सीख सकें।<br/>
-      आराम से बात करें, जैसे किसी दोस्त से करते हैं।
+    <div class="top-nav">
+      <div class="aldan-logo">
+        <svg viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="18" cy="18" r="18" fill="#00B386"/>
+          <path d="M18 6C18 6 10 13 10 20C10 24.4 13.6 28 18 28C22.4 28 26 24.4 26 20C26 13 18 6 18 6Z" fill="white" opacity="0.9"/>
+          <path d="M18 10C18 10 13 15.5 13 20C13 22.8 15.2 25 18 25C20.8 25 23 22.8 23 20C23 15.5 18 10 18 10Z" fill="#00B386"/>
+          <circle cx="18" cy="20" r="3" fill="white"/>
+        </svg>
+        <div class="aldan-logo-text">
+          <span class="brand">ALDAN</span>
+          <span class="tagline">healthcare with care</span>
+        </div>
+      </div>
+      <span class="nav-right">Coach</span>
     </div>
-    <button class="btn-primary" onclick="showModules()">शुरू करें → Start</button>
-    <div class="version-tag">v1.0 · coach.aldancare.com</div>
+    <div class="welcome-body">
+      <div class="welcome-hero">
+        <div class="welcome-hero-logo">
+          <svg viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="18" cy="18" r="18" fill="rgba(255,255,255,0.2)"/>
+            <path d="M18 6C18 6 10 13 10 20C10 24.4 13.6 28 18 28C22.4 28 26 24.4 26 20C26 13 18 6 18 6Z" fill="white" opacity="0.9"/>
+            <path d="M18 10C18 10 13 15.5 13 20C13 22.8 15.2 25 18 25C20.8 25 23 22.8 23 20C23 15.5 18 10 18 10Z" fill="#00B386"/>
+            <circle cx="18" cy="20" r="3" fill="white"/>
+          </svg>
+        </div>
+        <h1>Aldan Coach</h1>
+        <p>WomEm Bihar · Playbook Capture</p>
+      </div>
+      <div class="welcome-greeting">
+        <div class="g-label">Message for Amardeep ji</div>
+        <p>नमस्ते Amardeep ji 🙏<br/>यह conversation आपकी expertise को capture करने के लिए है — ताकि Bihar के सभी MBEs आपसे सीख सकें।<br/>आराम से बात करें, जैसे किसी दोस्त से करते हैं।</p>
+      </div>
+      <button class="btn-primary" onclick="showModules()">Start → शुरू करें</button>
+      <div class="version-tag">v2.0 · coach.aldancare.com</div>
+    </div>
   </div>
 
   <!-- MODULES -->
   <div class="screen" id="modules">
-    <div class="modules-header">
-      <button class="back-btn" onclick="showWelcome()">← वापस</button>
-      <h2 class="modules-title">कौन सा module करें?</h2>
-      <p class="modules-sub">कोई भी module चुनें। बाद में बाकी कर सकते हैं।</p>
+    <div class="top-nav">
+      <div class="aldan-logo">
+        <svg viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="18" cy="18" r="18" fill="#00B386"/>
+          <path d="M18 6C18 6 10 13 10 20C10 24.4 13.6 28 18 28C22.4 28 26 24.4 26 20C26 13 18 6 18 6Z" fill="white" opacity="0.9"/>
+          <path d="M18 10C18 10 13 15.5 13 20C13 22.8 15.2 25 18 25C20.8 25 23 22.8 23 20C23 15.5 18 10 18 10Z" fill="#00B386"/>
+          <circle cx="18" cy="20" r="3" fill="white"/>
+        </svg>
+        <div class="aldan-logo-text">
+          <span class="brand">ALDAN</span>
+          <span class="tagline">healthcare with care</span>
+        </div>
+      </div>
+      <button class="back-btn" onclick="showWelcome()">← Back</button>
     </div>
     <div class="modules-scroll">
+      <div style="padding:16px 0 12px">
+        <h2 class="modules-title">Choose a Module</h2>
+        <p class="modules-sub">Pick any module. You can continue later.</p>
+      </div>
+
       <div class="module-card" id="mod-card-1" onclick="startModule(1)">
+        <div class="card-accent m1"></div>
         <div class="mod-top">
           <div class="mod-icon m1">🧠</div>
           <div class="mod-info">
             <div class="mod-num">Module 1</div>
             <div class="mod-name">Doctor Reading</div>
-            <div class="mod-desc">Doctor ke saath meeting shuru hote hi aap kya dekhte ho? Kaise identify karte ho ki kaun sa approach kaam karega?</div>
+            <div class="mod-desc">How do you read a doctor in the first 2 minutes? What approach do you decide on?</div>
           </div>
           <span class="mod-badge badge-new" id="badge-1">New</span>
         </div>
@@ -212,12 +267,13 @@ html,body{height:100%;background:var(--navy);color:var(--white);font-family:'DM 
       </div>
 
       <div class="module-card" id="mod-card-2" onclick="startModule(2)">
+        <div class="card-accent m2"></div>
         <div class="mod-top">
           <div class="mod-icon m2">💊</div>
           <div class="mod-info">
             <div class="mod-num">Module 2</div>
             <div class="mod-name">Product Detailing</div>
-            <div class="mod-desc">Ek-ek product ke liye — Ovalux, Lacoria, LOQ10, Myolife Plus, Utilac, Argilux — aap exact kya bolte ho?</div>
+            <div class="mod-desc">Product by product — Ovalux, Lacoria, Myolife Plus, Aldova, Argilux and more. What exactly do you say?</div>
           </div>
           <span class="mod-badge badge-new" id="badge-2">New</span>
         </div>
@@ -228,12 +284,13 @@ html,body{height:100%;background:var(--navy);color:var(--white);font-family:'DM 
       </div>
 
       <div class="module-card" id="mod-card-3" onclick="startModule(3)">
+        <div class="card-accent m3"></div>
         <div class="mod-top">
           <div class="mod-icon m3">⚔️</div>
           <div class="mod-info">
             <div class="mod-num">Module 3</div>
             <div class="mod-name">Objection Stress Test</div>
-            <div class="mod-desc">Main ek skeptical Bihar doctor ban jata hoon — Muzaffarpur ki senior gynecologist. Aap detail karein.</div>
+            <div class="mod-desc">I become a skeptical Muzaffarpur gynecologist. You detail me. Real pressure test.</div>
           </div>
           <span class="mod-badge badge-new" id="badge-3">New</span>
         </div>
@@ -244,12 +301,13 @@ html,body{height:100%;background:var(--navy);color:var(--white);font-family:'DM 
       </div>
 
       <div class="module-card" id="mod-card-4" onclick="startModule(4)">
+        <div class="card-accent m4"></div>
         <div class="mod-top">
           <div class="mod-icon m4">⭐</div>
           <div class="mod-info">
             <div class="mod-num">Module 4</div>
             <div class="mod-name">Excellence Code</div>
-            <div class="mod-desc">Aapki nazar mein ek achhe MBE aur average MBE mein kya fark hota hai? Bihar territory ke baare mein kya jaante ho?</div>
+            <div class="mod-desc">What separates a great MBE from an average one? Your Bihar territory secrets.</div>
           </div>
           <span class="mod-badge badge-new" id="badge-4">New</span>
         </div>
@@ -275,9 +333,9 @@ html,body{height:100%;background:var(--navy);color:var(--white);font-family:'DM 
       <div class="typing-indicator" id="typing"><div class="typing-dots"><span></span><span></span><span></span></div></div>
     </div>
     <div class="input-area">
-      <div class="voice-hint" id="voice-hint">🎤 Mic button dabayein ya type karein</div>
+      <div class="voice-hint" id="voice-hint">🎤 Tap mic or type your answer</div>
       <div class="input-row">
-        <textarea class="input-box" id="user-input" placeholder="Yahan type karein..." rows="1" oninput="autoResize(this)" onkeydown="handleKey(event)"></textarea>
+        <textarea class="input-box" id="user-input" placeholder="Type here..." rows="1" oninput="autoResize(this)" onkeydown="handleKey(event)"></textarea>
         <button class="mic-btn" id="mic-btn" onclick="toggleMic()" title="Voice input">🎤</button>
         <button class="send-btn" id="send-btn" onclick="sendMessage()" title="Send">➤</button>
       </div>
@@ -287,8 +345,18 @@ html,body{height:100%;background:var(--navy);color:var(--white);font-family:'DM 
   <!-- ADMIN -->
   <div class="screen" id="admin">
     <div class="admin-header">
-      <h1>📊 Coach Admin</h1>
-      <p>Amardeep ji ke responses · Live view</p>
+      <div class="aldan-logo" style="margin-bottom:8px">
+        <svg viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:28px;height:28px">
+          <circle cx="18" cy="18" r="18" fill="#00B386"/>
+          <path d="M18 6C18 6 10 13 10 20C10 24.4 13.6 28 18 28C22.4 28 26 24.4 26 20C26 13 18 6 18 6Z" fill="white" opacity="0.9"/>
+          <path d="M18 10C18 10 13 15.5 13 20C13 22.8 15.2 25 18 25C20.8 25 23 22.8 23 20C23 15.5 18 10 18 10Z" fill="#00B386"/>
+          <circle cx="18" cy="20" r="3" fill="white"/>
+        </svg>
+        <div class="aldan-logo-text">
+          <span class="brand" style="font-size:14px">Coach Admin</span>
+          <span class="tagline">Live session responses</span>
+        </div>
+      </div>
     </div>
     <div class="admin-body" id="admin-body">
       <div class="empty-state"><div class="icon">⏳</div><p>Loading sessions...</p></div>
