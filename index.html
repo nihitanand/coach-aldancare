@@ -968,10 +968,10 @@ function updateNameBtn() {
 function confirmName() {
   const name = document.getElementById('nameInput')?.value?.trim();
   if (!name) return;
+  const prevName = localStorage.getItem('coach_respondent_name');
   respondentName = name;
-  // Reset session if switching names
-  const savedName = localStorage.getItem('coach_respondent_name');
-  if (savedName && savedName !== name) {
+  // Always reset session when name changes OR when Test is selected
+  if (prevName !== name || name.trim().toLowerCase() === 'test') {
     sessionId = null;
     localStorage.removeItem('coach_session_id');
   }
@@ -1020,13 +1020,43 @@ async function startModule(modNum) {
     sessionId = 'session_' + Date.now();
     await DB.ref(`${DB_PATH}/sessions/${sessionId}/meta`).set({
       started: new Date().toISOString(),
-      respondent: 'Amardeep Sinha',
+      respondent: respondentName || 'Unknown',
+      isTest: respondentName.trim().toLowerCase() === 'test',
       territory: 'Bihar'
     });
   }
 
   // Mark module started
   await DB.ref(`${DB_PATH}/sessions/${sessionId}/modules/${modNum}/status`).set('started');
+
+  // Reload existing exchanges from Firebase into conversationHistory
+  try {
+    const snap = await DB.ref(`${DB_PATH}/sessions/${sessionId}/modules/${modNum}/exchanges`).get();
+    const existing = snap.val();
+    if (existing) {
+      const exchanges = Object.values(existing).filter(Boolean).sort((a,b) => new Date(a.ts) - new Date(b.ts));
+      exchanges.forEach(ex => {
+        if (ex.q) {
+          conversationHistory.push({ role: 'assistant', content: ex.q });
+          appendBubble('ai', ex.q);
+        }
+        if (ex.a) {
+          conversationHistory.push({ role: 'user', content: ex.a });
+          appendBubble('user', ex.a);
+        }
+      });
+      questionCount = exchanges.length;
+      updateProgress();
+      // Don't get first AI message if history exists
+      if (exchanges.length > 0) {
+        showTyping(false);
+        disableInput(false);
+        isWaitingForAI = false;
+        scrollChat();
+        return;
+      }
+    }
+  } catch(e) { console.error('History load failed:', e); }
 
   // Update UI
   const cfg = MODULES_CONFIG[modNum];
