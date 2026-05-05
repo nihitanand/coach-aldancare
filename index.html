@@ -1429,6 +1429,32 @@ function toggleTestFilter() {
   loadAdminData();
 }
 
+async function deleteAllTests() {
+  if (!confirm('Delete ALL test sessions permanently? This cannot be undone.')) return;
+  try {
+    const snap = await DB.ref(DB_PATH + '/sessions').get();
+    const sessions = snap.val();
+    if (!sessions) return;
+    const promises = Object.entries(sessions)
+      .filter(([id, data]) => data?.meta?.isTest)
+      .map(([id]) => DB.ref(DB_PATH + '/sessions/' + id).remove());
+    await Promise.all(promises);
+    loadAdminData();
+  } catch(e) { alert('Delete failed: ' + e.message); }
+}
+
+async function deleteAllSessions() {
+  if (!confirm('⚠️ Delete ALL sessions including Amardeep real data? Are you absolutely sure?')) return;
+  if (!confirm('This will permanently delete everything. Last chance — continue?')) return;
+  try {
+    await DB.ref(DB_PATH + '/sessions').remove();
+    // Clear localStorage too
+    localStorage.removeItem('coach_session_id');
+    localStorage.removeItem('coach_respondent_name');
+    loadAdminData();
+  } catch(e) { alert('Delete failed: ' + e.message); }
+}
+
 async function deleteSession(sessionId) {
   if (!confirm('Delete this session permanently?')) return;
   try {
@@ -1448,6 +1474,8 @@ async function loadAdminData() {
     <div style="display:flex;gap:8px;align-items:center;margin-bottom:16px">
       <button class="refresh-btn" style="margin-bottom:0" onclick="loadAdminData()">↻ Refresh</button>
       <button class="refresh-btn" style="margin-bottom:0" onclick="toggleTestFilter()" id="testFilterBtn">🧪 Hide Tests</button>
+      <button class="refresh-btn" style="margin-bottom:0;border-color:#FCA5A5;color:#DC2626" onclick="deleteAllTests()" id="deleteAllTestsBtn">🗑️ Delete All Tests</button>
+      <button class="refresh-btn" style="margin-bottom:0;border-color:#FCA5A5;color:#DC2626" onclick="deleteAllSessions()" id="deleteAllBtn">🗑️ Delete All</button>
     </div>
     <div class="empty-state"><div class="icon">⏳</div><p>Loading...</p></div>
   `;
