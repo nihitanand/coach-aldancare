@@ -1135,52 +1135,141 @@ function handleKey(e) {
 /* ═══════════════════════════════════════════════
    VOICE INPUT
 ═══════════════════════════════════════════════ */
+// ── Voice recording state ──
+let micActive    = false;   // user intent — true while they want to record
+let finalText    = '';      // accumulated confirmed text
+let micTimer     = null;    // max-duration safety timer
+const MIC_MAX_MS = 60000;   // 60 second max
+
 function toggleMic() {
   if (!('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
-    alert('Voice input is not supported in this browser. Please use Chrome on Android.');
+    alert('Voice input is not supported. Please use Chrome browser.');
     return;
   }
-  if (isRecording) {
-    recognition?.stop();
-    return;
+  if (micActive) {
+    stopMic();
+  } else {
+    startMic();
   }
+}
+
+function startMic() {
+  micActive = true;
+  finalText = document.getElementById('user-input').value || '';
+  startRecognitionInstance();
+
+  // Safety: auto-stop after 60 seconds
+  micTimer = setTimeout(() => {
+    stopMic();
+    const hint = document.getElementById('voice-hint');
+    if (hint) hint.textContent = '⏱ 60s limit reached — tap mic to record more';
+  }, MIC_MAX_MS);
+
+  updateMicUI(true);
+}
+
+function stopMic() {
+  micActive = false;
+  clearTimeout(micTimer);
+  micTimer = null;
+  if (recognition) { try { recognition.stop(); } catch(e) {} }
+  updateMicUI(false);
+}
+
+function updateMicUI(active) {
+  const micBtn = document.getElementById('mic-btn');
+  const hint   = document.getElementById('voice-hint');
+  if (!micBtn || !hint) return;
+  if (active) {
+    micBtn.classList.add('recording');
+    micBtn.textContent = '⏹';
+    hint.textContent = '🔴 Recording... tap ⏹ to stop';
+  } else {
+    micBtn.classList.remove('recording');
+    micBtn.textContent = '🎤';
+    hint.textContent = '🎤 Tap mic or type your answer';
+    isRecording = false;
+  }
+}
+
+function startRecognitionInstance() {
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
   recognition = new SpeechRecognition();
   recognition.lang = 'en-IN';
-  recognition.continuous = false;
+  recognition.continuous = true;
   recognition.interimResults = true;
+  recognition.maxAlternatives = 1;
 
-  const micBtn = document.getElementById('mic-btn');
-  const input  = document.getElementById('user-input');
-  const hint   = document.getElementById('voice-hint');
+  const input = document.getElementById('user-input');
 
   recognition.onstart = () => {
     isRecording = true;
-    micBtn.classList.add('recording');
-    micBtn.textContent = '⏹';
-    hint.textContent = '🔴 Sun raha hoon... boliye';
   };
+
   recognition.onresult = (e) => {
-    let transcript = '';
+    let interim = '';
+    let newFinal = '';
     for (let i = e.resultIndex; i < e.results.length; i++) {
-      transcript += e.results[i][0].transcript;
+      const t = e.results[i][0].transcript;
+      if (e.results[i].isFinal) {
+        newFinal += t + ' ';
+      } else {
+        interim += t;
+      }
     }
-    input.value = transcript;
-    autoResize(input);
+    if (newFinal) finalText += newFinal;
+    if (input) {
+      input.value = (finalText + interim).trim();
+      autoResize(input);
+    }
   };
+
   recognition.onend = () => {
     isRecording = false;
-    micBtn.classList.remove('recording');
-    micBtn.textContent = '🎤';
-    hint.textContent = '🎤 Mic button dabayein ya type karein';
+    // Auto-restart if user hasn't stopped intentionally
+    if (micActive) {
+      try {
+        recognition.start();
+        isRecording = true;
+      } catch(e) {
+        // Brief delay then restart
+        setTimeout(() => {
+          if (micActive) {
+            try { startRecognitionInstance(); } catch(e2) {}
+          }
+        }, 300);
+      }
+    }
   };
-  recognition.onerror = () => {
+
+  recognition.onerror = (e) => {
     isRecording = false;
-    micBtn.classList.remove('recording');
-    micBtn.textContent = '🎤';
-    hint.textContent = '❌ Voice nahi suna — dobara try karein';
+    if (e.error === 'no-speech' && micActive) {
+      // No speech detected — restart silently
+      setTimeout(() => {
+        if (micActive) {
+          try { startRecognitionInstance(); } catch(err) {}
+        }
+      }, 300);
+    } else if (e.error === 'not-allowed') {
+      stopMic();
+      const hint = document.getElementById('voice-hint');
+      if (hint) hint.textContent = '❌ Mic permission denied — check browser settings';
+    } else if (micActive) {
+      setTimeout(() => {
+        if (micActive) {
+          try { startRecognitionInstance(); } catch(err) {}
+        }
+      }, 500);
+    }
   };
-  recognition.start();
+
+  try {
+    recognition.start();
+  } catch(e) {
+    console.error('Recognition start failed:', e);
+    updateMicUI(false);
+  }
 }
 
 /* ═══════════════════════════════════════════════
