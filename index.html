@@ -1335,7 +1335,7 @@ function toggleTestFilter() {
 async function deleteSession(sessionId) {
   if (!confirm('Delete this session permanently?')) return;
   try {
-    await DB.ref(\`\${DB_PATH}/sessions/\${sessionId}\`).remove();
+    await DB.ref(DB_PATH + '/sessions/' + sessionId).remove();
     // Also clear localStorage if it matches
     if (localStorage.getItem('coach_session_id') === sessionId) {
       localStorage.removeItem('coach_session_id');
