@@ -1029,6 +1029,24 @@ async function startModule(modNum) {
   conversationHistory = [];
   questionCount = 0;
 
+  // Stop any active mic recording
+  if (micActive) stopMic();
+
+  // Setup UI first — always
+  const cfg = MODULES_CONFIG[modNum];
+  document.getElementById('interview-mod-name').textContent = `${cfg.icon} ${cfg.name}`;
+  document.getElementById('interview-progress').textContent = '';
+  document.getElementById('progress-fill').style.width = '0%';
+
+  // Clear chat area
+  const chatArea = document.getElementById('chat-area');
+  chatArea.innerHTML = '<div class="typing-indicator" id="typing"><div class="typing-dots"><span></span><span></span><span></span></div></div>';
+
+  // Switch to interview screen immediately — always
+  showScreen('interview');
+  disableInput(true);
+  isWaitingForAI = true;
+
   // Create session if not exists
   if (!sessionId) {
     sessionId = 'session_' + Date.now();
@@ -1043,26 +1061,22 @@ async function startModule(modNum) {
   // Mark module started
   await DB.ref(`${DB_PATH}/sessions/${sessionId}/modules/${modNum}/status`).set('started');
 
-  // Reload existing exchanges from Firebase into conversationHistory
+  // Load existing exchanges from Firebase
   try {
     const snap = await DB.ref(`${DB_PATH}/sessions/${sessionId}/modules/${modNum}/exchanges`).get();
     const existing = snap.val();
     if (existing) {
       const exchanges = Object.values(existing).filter(Boolean).sort((a,b) => new Date(a.ts) - new Date(b.ts));
       exchanges.forEach(ex => {
-        if (ex.q) {
-          conversationHistory.push({ role: 'assistant', content: ex.q });
-          appendBubble('ai', ex.q);
-        }
-        if (ex.a) {
-          conversationHistory.push({ role: 'user', content: ex.a });
-          appendBubble('user', ex.a);
-        }
+        if (ex.q) conversationHistory.push({ role: 'assistant', content: ex.q });
+        if (ex.a) conversationHistory.push({ role: 'user', content: ex.a });
       });
       questionCount = exchanges.length;
+      // Replay history into chat
+      conversationHistory.forEach(h => appendBubble(h.role === 'assistant' ? 'ai' : 'user', h.content));
       updateProgress();
-      // Don't get first AI message if history exists
       if (exchanges.length > 0) {
+        // Resume — show last AI message context and let user continue
         showTyping(false);
         disableInput(false);
         isWaitingForAI = false;
@@ -1072,19 +1086,7 @@ async function startModule(modNum) {
     }
   } catch(e) { console.error('History load failed:', e); }
 
-  // Update UI
-  const cfg = MODULES_CONFIG[modNum];
-  document.getElementById('interview-mod-name').textContent = `${cfg.icon} ${cfg.name}`;
-  document.getElementById('interview-progress').textContent = '';
-  document.getElementById('progress-fill').style.width = '0%';
-
-  // Clear chat
-  const chatArea = document.getElementById('chat-area');
-  chatArea.innerHTML = '<div class="typing-indicator" id="typing"><div class="typing-dots"><span></span><span></span><span></span></div></div>';
-
-  showScreen('interview');
-
-  // Get first AI message
+  // Fresh start — get first AI message
   await getAIResponse(null);
 }
 
