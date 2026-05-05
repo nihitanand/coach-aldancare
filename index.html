@@ -1118,6 +1118,7 @@ async function sendMessage() {
   if (!text) return;
 
   input.value = '';
+  finalText = '';
   autoResize(input);
   appendBubble('user', text);
   scrollChat();
@@ -1155,7 +1156,9 @@ function toggleMic() {
 
 function startMic() {
   micActive = true;
-  finalText = document.getElementById('user-input').value || '';
+  finalText = '';
+  const inp = document.getElementById('user-input');
+  if (inp) { inp.value = ''; autoResize(inp); }
   startRecognitionInstance();
 
   // Safety: auto-stop after 60 seconds
@@ -1288,7 +1291,12 @@ function appendBubble(role, text) {
 
   const inner = document.createElement('div');
   inner.className = 'bubble-inner';
-  inner.innerHTML = text.replace(/\n/g,'<br/>');
+  // Render basic markdown
+  const rendered = text
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.+?)\*/g, '<em>$1</em>')
+    .replace(/\n/g, '<br/>');
+  inner.innerHTML = rendered;
 
   wrap.appendChild(sender);
   wrap.appendChild(inner);
